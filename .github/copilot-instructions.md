@@ -4,11 +4,16 @@
 - Read the nearest `index.md` before making changes within a Project or Area.
 - Use the document's single level-one heading as its canonical title; do not duplicate it in frontmatter.
 - Preserve YAML frontmatter fields that are not part of the requested change.
+- Treat frontmatter `related` IDs as canonical relationships.
+- Do not manually edit content between `workrepo:related` markers; run `workrepo links`.
 - Do not edit original Word, Excel, PDF, or image files unless explicitly requested.
-- Keep generated and temporary document data under `work-repository/.workspace/cache/`.
+- Keep generated and temporary document data under `.workspace/cache/` or `.workspace/indexes/`.
 - Do not move, delete, archive, or broadly rewrite documents without explicit confirmation.
 - Keep Project and Area as separate concepts; represent their many-to-many relationship with metadata and links.
-- Treat repositories under `code/` as independent projects with their own Git histories.
-- Never read, modify, stage, or suggest committing files under `local-private/`.
+- Record events in `log/`; keep current state in the related Project or Area.
+- Treat `inbox/` as temporary capture state, not a permanent document type.
+- Put repository-maintenance code in `src/workrepo/` and small Project-specific code inside that Project.
+- Assume every tracked file may be shared with both private GitHub and the configured AI.
+- Keep material that is not allowed in either system physically outside this repository.
 - Use TermKeeper through its public CLI, MCP, or HTTP interface and never access its database directly.
 - Report possible sensitive information before adding it to Git.

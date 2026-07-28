@@ -1,0 +1,14 @@
+{
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "./assets",
+  "newLinkFormat": "relative",
+  "showUnsupportedFiles": true,
+  "useMarkdownLinks": true,
+  "userIgnoreFilters": [
+    ".github/",
+    ".venv/",
+    ".workspace/",
+    "src/",
+    "tests/"
+  ]
+}

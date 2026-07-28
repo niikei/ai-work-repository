@@ -1,9 +1,26 @@
 .DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
-# Keep the placement convention, but never track private contents.
-local-private/*
-!local-private/README.md
+# Keep shared Obsidian behavior, but not personal UI state or extensions.
+.obsidian/*
+!.obsidian/app.json
+!.obsidian/templates.json
 
-# Child directories contain independent repositories.
-code/*
-!code/README.md
+# Generated machine-readable views are reproducible from tracked documents.
+.workspace/cache/*
+!.workspace/cache/.gitkeep
+.workspace/indexes/*
+!.workspace/indexes/.gitkeep
+
+# Raw or sensitive material must live outside this repository. These patterns
+# only protect common accidental local outputs; they are not a security boundary.
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example

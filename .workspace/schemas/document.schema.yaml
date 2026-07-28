@@ -1,0 +1,32 @@
+version: 1
+title_source: first_h1
+required:
+  - type
+  - id
+  - status
+  - created
+  - updated
+  - related
+types:
+  log:
+    root: log
+    statuses: [recorded]
+    required: [date]
+  project:
+    root: projects
+    statuses: [planned, active, blocked, completed, cancelled]
+  area:
+    root: areas
+    statuses: [active, attention, inactive]
+  role:
+    root: library/roles
+    statuses: [draft, active, retired]
+  system:
+    root: library/systems
+    statuses: [draft, active, retired]
+  process:
+    root: library/processes
+    statuses: [draft, active, retired]
+  reference:
+    root: library/references
+    statuses: [draft, active, retired]
