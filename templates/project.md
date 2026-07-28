@@ -1,7 +1,6 @@
 ---
 type: project
 id: replace-with-stable-id
-title: Project title
 status: active
 areas: []
 created: YYYY-MM-DD

@@ -1,6 +1,5 @@
 ---
 type: workspace
-title: AI-ready Work Repository
 status: active
 ---
 

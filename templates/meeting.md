@@ -1,6 +1,5 @@
 ---
 type: meeting
-title: Meeting title
 date: YYYY-MM-DD
 status: draft
 ---
