@@ -190,7 +190,12 @@ def _validate_log_path(document: Document, rule: TypeRule) -> list[Issue]:
     if log_date is None:
         return []
     week = work_week(log_date)
-    expected_parent = rule.root / f"{week.start:%Y}" / week.directory_name
+    expected_parent = (
+        rule.root
+        / f"{week.start:%Y}"
+        / f"{week.start:%m}"
+        / week.directory_name
+    )
     expected_prefix = f"{log_date.isoformat()}-"
     issues: list[Issue] = []
     if document.path.parent != expected_parent:

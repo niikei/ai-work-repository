@@ -56,7 +56,7 @@ def test_create_log_with_existing_relationship(repository: Path) -> None:
     )
 
     assert path.relative_to(repository) == Path(
-        "10-log/2026/2026-07-27-week/2026-07-29-kickoff.md",
+        "10-log/2026/07/2026-07-27-week/2026-07-29-kickoff.md",
     )
     assert "  - project:erp-upgrade" in path.read_text(encoding="utf-8")
     assert check_repository(repository) == []
@@ -98,7 +98,7 @@ def test_log_week_stays_together_across_year_boundary(repository: Path) -> None:
     )
 
     assert path.relative_to(repository) == Path(
-        "10-log/2026/2026-12-28-week/2027-01-01-new-year-incident.md",
+        "10-log/2026/12/2026-12-28-week/2027-01-01-new-year-incident.md",
     )
 
 
@@ -114,13 +114,13 @@ def test_check_rejects_log_in_month_directory(repository: Path) -> None:
         ),
     )
     incorrect_path = repository / "10-log/2026/07/2026-07-29-meeting.md"
-    incorrect_path.parent.mkdir(parents=True)
+    incorrect_path.parent.mkdir(parents=True, exist_ok=True)
     path.rename(incorrect_path)
 
     messages = [issue.message for issue in check_repository(repository)]
 
     assert messages == [
-        "log for 2026-07-29 must be located under 10-log/2026/2026-07-27-week/",
+        "log for 2026-07-29 must be located under 10-log/2026/07/2026-07-27-week/",
     ]
 
 

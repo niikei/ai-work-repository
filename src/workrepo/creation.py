@@ -108,6 +108,7 @@ def _document_path(
         return (
             type_root
             / f"{week.start:%Y}"
+            / f"{week.start:%m}"
             / week.directory_name
             / f"{document_date.isoformat()}-{slug}.md"
         )
