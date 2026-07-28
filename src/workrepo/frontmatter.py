@@ -6,6 +6,7 @@ import yaml
 
 from workrepo.markdown import inspect_markdown
 from workrepo.models import Document
+from workrepo.yamlutil import load_yaml
 
 FRONTMATTER_MARKER = "---"
 
@@ -45,7 +46,11 @@ def parse_document(path: Path, *, root: Path) -> Document:
 
 
 def _load_metadata(source: str) -> dict[str, object]:
-    raw: object = yaml.safe_load(source)
+    try:
+        raw = load_yaml(source)
+    except yaml.YAMLError as error:
+        message = f"invalid YAML frontmatter: {error}"
+        raise DocumentParseError(message) from error
     if not isinstance(raw, dict):
         message = "frontmatter must be a YAML mapping"
         raise DocumentParseError(message)

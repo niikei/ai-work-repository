@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+if command -v uv >/dev/null 2>&1; then
+  exec uv run workrepo check --staged
+fi
+
+exec workrepo check --staged

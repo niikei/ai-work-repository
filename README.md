@@ -24,8 +24,9 @@
 2. 起きた事実や新しい管理対象は`workrepo new`で作成する。
 3. 現在の状態や次の行動は、関連するProjectまたはAreaの`index.md`へ反映する。
 4. 繰り返し使う知識は`40-library/`へ整理する。
-5. `uv run workrepo check`で構造とリンクを検証する。
-6. レビュー前に`uv run workrepo refresh`でリンク、AI向け索引、Dashboardを更新する。
+5. `uv run workrepo inbox review`で古い未整理項目を確認する。
+6. `uv run workrepo check`で構造とリンクを検証する。
+7. レビュー前に`uv run workrepo refresh`でリンク、AI向け索引、Dashboardを更新する。
 
 ## 日常コマンド
 
@@ -105,6 +106,8 @@ Python 3.12以上と[uv](https://docs.astral.sh/uv/)を用意し、次を実行�
 
 ```shell
 uv sync
+uv run workrepo hooks install
+uv run workrepo doctor
 uv run workrepo check
 uv run workrepo refresh
 uv run pytest
@@ -113,6 +116,39 @@ uv run ruff check .
 
 開発依存関係はuvの既定の`dev`グループなので、通常は`--extra dev`を付けません。
 CIはLinuxとWindowsの両方で、検証、生成物の差分、Ruff、mypy、pytestを確認します。
+
+## ローカルだけで効く品質ゲート
+
+GitHubやCIを利用できない環境でも、`workrepo hooks install`を各cloneで一度実行すると、
+commit直前に「実際にstagingされた内容」を検査します。作業中ファイルではなくGit indexを
+見るため、commit対象と検査対象がずれません。
+
+```shell
+# 日常の確認
+uv run workrepo check
+uv run workrepo inbox status
+uv run workrepo inbox review
+
+# commitされる内容だけを手動確認
+uv run workrepo check --staged
+
+# 警告も失敗として扱う厳格なレビュー
+uv run workrepo check --strict
+```
+
+次はcommitを拒否します。
+
+- `00-inbox/`直下の`YYYY-MM-DD.md`以外の一時ファイル
+- 30日以上未処理のInbox項目、または50件を超える未処理項目
+- 不正・重複したYAMLキー、未知のfrontmatter項目
+- 壊れたリンク、重複ID、存在しない関連ID、スキーマ違反
+- commit済み文書の`created`を書き換えた変更
+- 本文を変更したのに`updated`が作業当日になっていないstaged文書
+- 未来の`created`、`updated`、`last_reviewed`
+
+7日以上のInbox項目と、完了済みなのに残っているInboxファイルは警告します。期限と件数は
+[`.workspace/policy.yaml`](.workspace/policy.yaml)で調整できます。緊急時にhookを迂回した
+commitは可能ですが、通常運用では`--no-verify`を使わず、先に原因を整理してください。
 
 ## コードとデータの境界
 

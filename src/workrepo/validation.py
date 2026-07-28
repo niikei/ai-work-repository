@@ -1,18 +1,24 @@
 """Repository-wide metadata, structure, and Markdown-link validation."""
 
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Iterable
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+import yaml
+
 from workrepo.calendar import work_week
+from workrepo.creation import WINDOWS_RESERVED_NAMES
 from workrepo.generated import remove_related_block
+from workrepo.inbox import InboxReport, inspect_inbox
 from workrepo.markdown import inspect_markdown
 from workrepo.models import Artifact, ContentDocument, Document, Issue
 from workrepo.schema import Schema, TypeRule
 from workrepo.state import RepositoryState, discover_repository
+from workrepo.yamlutil import load_yaml
 
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*:[a-z0-9][a-z0-9:-]*$")
 IGNORED_MARKDOWN_DIRECTORIES = frozenset(
@@ -44,7 +50,29 @@ def inspect_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
         ),
     )
     issues.extend(_validate_markdown_links(state.root))
+    issues.extend(_validate_repository_files(state))
+    issues.extend(inbox_report(state).errors)
     return state, sorted(issues)
+
+
+def inbox_report(
+    state: RepositoryState,
+    *,
+    today: date | None = None,
+) -> InboxReport:
+    """Return Inbox health using the same state and policy as validation."""
+    effective_today = today or datetime.now(tz=UTC).astimezone().date()
+    return inspect_inbox(
+        state.root,
+        state.schema.inbox_root,
+        state.policy.inbox,
+        today=effective_today,
+    )
+
+
+def repository_warnings(state: RepositoryState) -> list[Issue]:
+    """Return non-blocking findings for a valid or invalid repository state."""
+    return list(inbox_report(state).warnings)
 
 
 def require_repository(root: Path) -> RepositoryState:
@@ -74,6 +102,73 @@ def related_ids(document: ContentDocument) -> Iterable[str]:
     if not isinstance(raw, list):
         return ()
     return (item for item in raw if isinstance(item, str))
+
+
+def _validate_repository_files(state: RepositoryState) -> list[Issue]:
+    issues: list[Issue] = []
+    paths = [
+        path
+        for path in state.root.rglob("*")
+        if path.is_file() and not _is_ignored(path.relative_to(state.root))
+    ]
+    normalized_paths: dict[str, list[Path]] = {}
+    for path in paths:
+        relative = path.relative_to(state.root)
+        normalized_paths.setdefault(relative.as_posix().casefold(), []).append(relative)
+        issues.extend(_validate_portable_path(relative, state.policy.files.max_path_length))
+        try:
+            size = path.stat().st_size
+        except OSError as error:
+            issues.append(Issue(relative, f"cannot inspect file: {error}"))
+            continue
+        if size > state.policy.files.max_attachment_bytes:
+            issues.append(
+                Issue(
+                    relative,
+                    "file exceeds configured size limit: "
+                    f"{size} > {state.policy.files.max_attachment_bytes} bytes",
+                ),
+            )
+        if path.suffix.casefold() in {".yaml", ".yml"}:
+            issues.extend(_validate_yaml_file(path, relative))
+        if path.is_symlink():
+            try:
+                path.resolve().relative_to(state.root)
+            except ValueError:
+                issues.append(Issue(relative, "symbolic link points outside the repository"))
+    issues.extend(
+        Issue(path, "path differs from another path only by letter case")
+        for duplicates in normalized_paths.values()
+        if len(duplicates) > 1
+        for path in duplicates
+    )
+    return issues
+
+
+def _validate_portable_path(path: Path, max_length: int) -> list[Issue]:
+    issues: list[Issue] = []
+    if len(path.as_posix()) > max_length:
+        issues.append(Issue(path, f"path exceeds configured length limit: {max_length}"))
+    for component in path.parts:
+        if component != unicodedata.normalize("NFC", component):
+            issues.append(Issue(path, "path must use Unicode NFC normalization"))
+        if component.endswith((" ", ".")):
+            issues.append(Issue(path, "path component must not end with a space or period"))
+        if Path(component).stem.casefold() in WINDOWS_RESERVED_NAMES:
+            issues.append(Issue(path, f"path component is reserved on Windows: {component}"))
+    return issues
+
+
+def _validate_yaml_file(path: Path, relative: Path) -> list[Issue]:
+    try:
+        load_yaml(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as error:
+        return [Issue(relative, f"invalid YAML: {error}")]
+    return []
+
+
+def _is_ignored(path: Path) -> bool:
+    return any(part in IGNORED_MARKDOWN_DIRECTORIES for part in path.parts)
 
 
 def _validate_content(
@@ -123,6 +218,12 @@ def _validate_document(document: Document, schema: Schema) -> list[Issue]:
     issues.extend(_validate_id(document, document_type))
     issues.extend(_validate_status(document, rule))
     issues.extend(_validate_allowed_values(document, rule))
+    issues.extend(
+        _validate_known_fields(
+            document,
+            schema.required | rule.required | rule.optional | rule.values.keys(),
+        ),
+    )
     issues.extend(_validate_dates(document))
     issues.extend(_validate_log_path(document, rule))
     issues.extend(_validate_related(document))
@@ -153,6 +254,12 @@ def _validate_artifact(artifact: Artifact, schema: Schema) -> list[Issue]:
         ),
     )
     issues.extend(_validate_enum(artifact, "kind", schema.artifact.kinds))
+    issues.extend(
+        _validate_known_fields(
+            artifact,
+            schema.artifact.required | schema.artifact.optional,
+        ),
+    )
     issues.extend(_validate_dates(artifact))
     issues.extend(_validate_artifact_period(artifact))
     issues.extend(_validate_related(artifact))
@@ -219,6 +326,21 @@ def _validate_enum(
     return [] if issue is None else [issue]
 
 
+def _validate_known_fields(
+    document: ContentDocument,
+    allowed: Iterable[str],
+) -> list[Issue]:
+    allowed_fields = set(allowed)
+    return [
+        Issue(
+            document.path,
+            f"unknown frontmatter field: {field}; use x-* for custom fields",
+        )
+        for field in sorted(document.metadata)
+        if field not in allowed_fields and not field.startswith("x-")
+    ]
+
+
 def _enum_issue(
     document: ContentDocument,
     field: str,
@@ -251,14 +373,14 @@ def _validate_dates(document: ContentDocument) -> list[Issue]:
             issues.append(Issue(document.path, f"{field} must be an ISO date"))
         else:
             parsed[field] = parsed_value
+    today = datetime.now(tz=UTC).astimezone().date()
+    issues.extend(
+        Issue(document.path, f"{field} must not be in the future")
+        for field, value in parsed.items()
+        if value > today
+    )
     if parsed.keys() >= set(fields) and parsed["updated"] < parsed["created"]:
         issues.append(Issue(document.path, "updated must not be earlier than created"))
-    if (
-        "last_reviewed" in parsed
-        and "updated" in parsed
-        and parsed["last_reviewed"] > parsed["updated"]
-    ):
-        issues.append(Issue(document.path, "last_reviewed must not be later than updated"))
     if (
         "last_reviewed" in parsed
         and "updated" in parsed

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from workrepo.discovery import discover_artifacts, discover_documents
 from workrepo.models import Artifact, Document, Issue
+from workrepo.policy import Policy, load_policy
 from workrepo.schema import Schema, load_schema
 
 
@@ -16,12 +17,14 @@ class RepositoryState:
     schema: Schema
     documents: tuple[Document, ...]
     artifacts: tuple[Artifact, ...]
+    policy: Policy
 
 
 def discover_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
     """Load the schema and parse managed content exactly once."""
     repository_root = root.resolve()
     schema = load_schema(repository_root)
+    policy = load_policy(repository_root)
     documents, document_issues = discover_documents(repository_root, schema)
     artifacts, artifact_issues = discover_artifacts(
         repository_root,
@@ -33,5 +36,6 @@ def discover_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
         schema=schema,
         documents=tuple(documents),
         artifacts=tuple(artifacts),
+        policy=policy,
     )
     return state, [*document_issues, *artifact_issues]

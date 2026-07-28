@@ -14,31 +14,38 @@ types:
     root: 10-log
     statuses: [recorded]
     required: [date]
+    optional: []
   project:
     root: 20-projects
     statuses: [planned, active, blocked, completed, cancelled]
     required: [health]
+    optional: []
     values:
       health: [unknown, green, amber, red]
   area:
     root: 30-areas
     statuses: [active, paused, retired]
     required: [health, review_cycle, last_reviewed]
+    optional: []
     values:
       health: [unknown, green, amber, red]
       review_cycle: [weekly, monthly, quarterly, annual]
   role:
     root: 40-library/10-roles
     statuses: [draft, active, retired]
+    optional: []
   system:
     root: 40-library/20-systems
     statuses: [draft, active, retired]
+    optional: []
   process:
     root: 40-library/30-processes
     statuses: [draft, active, retired]
+    optional: []
   reference:
     root: 40-library/40-references
     statuses: [draft, active, retired]
+    optional: []
 artifact:
   roots: [20-projects, 30-areas]
   statuses: [draft, active, final, superseded]
@@ -51,3 +58,4 @@ artifact:
     - attachment-note
     - note
   required: [type, id, kind, status, created, updated, related]
+  optional: [period_start, period_end]

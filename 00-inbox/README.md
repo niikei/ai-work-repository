@@ -15,5 +15,15 @@
 - 継続的に監視する責任：`30-areas/`
 - 整理済みの再利用知識：`40-library/`
 
-Inbox内のファイルにfrontmatterは必須ではありません。定期的に処理し、削除、移動、
-または正式な文書への反映を行います。
+Inboxはファイル置き場ではなく、日付別の短いチェックリストです。手作業で`a.md`のような
+仮ファイルを作らず、次のコマンドで記録します。
+
+```shell
+uv run workrepo capture "確認する内容"
+uv run workrepo inbox status
+uv run workrepo inbox review
+```
+
+`capture`は`YYYY-MM-DD.md`へ`- [ ]`項目を追記します。処理時は、正式な文書へ反映して
+チェックを完了させ、完了項目しか残っていない日付ファイルは削除します。既定では7日で警告、
+30日でcommitを拒否します。Inbox内のファイルにYAML frontmatterは付けません。

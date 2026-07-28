@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from workrepo.yamlutil import load_yaml
+
 SCHEMA_PATH = Path(".workspace/schemas/document.schema.yaml")
 SUPPORTED_SCHEMA_VERSION = 3
 
@@ -16,6 +18,7 @@ class TypeRule:
     root: Path
     statuses: frozenset[str]
     required: frozenset[str]
+    optional: frozenset[str]
     values: dict[str, frozenset[str]]
 
 
@@ -27,6 +30,7 @@ class ArtifactRule:
     statuses: frozenset[str]
     kinds: frozenset[str]
     required: frozenset[str]
+    optional: frozenset[str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +46,11 @@ class Schema:
 
 def load_schema(root: Path) -> Schema:
     """Load and type-check the repository schema."""
-    raw: object = yaml.safe_load((root / SCHEMA_PATH).read_text(encoding="utf-8"))
+    try:
+        raw = load_yaml((root / SCHEMA_PATH).read_text(encoding="utf-8"))
+    except yaml.YAMLError as error:
+        message = f"invalid schema YAML: {error}"
+        raise ValueError(message) from error
     schema_mapping = _mapping(raw, label="schema")
     version = schema_mapping.get("version")
     if version != SUPPORTED_SCHEMA_VERSION:
@@ -80,11 +88,15 @@ def _load_type_rule(name: str, raw: object) -> TypeRule:
     required = frozenset(
         _string_list(mapping.get("required", []), label=f"{name}.required"),
     )
+    optional = frozenset(
+        _string_list(mapping.get("optional", []), label=f"{name}.optional"),
+    )
     values = _load_values(mapping.get("values", {}), label=f"{name}.values")
     return TypeRule(
         root=_safe_path(root, label=f"{name}.root"),
         statuses=statuses,
         required=required,
+        optional=optional,
         values=values,
     )
 
@@ -106,6 +118,9 @@ def _load_artifact_rule(raw: object) -> ArtifactRule:
         kinds=frozenset(_string_list(mapping.get("kinds"), label="artifact.kinds")),
         required=frozenset(
             _string_list(mapping.get("required"), label="artifact.required"),
+        ),
+        optional=frozenset(
+            _string_list(mapping.get("optional", []), label="artifact.optional"),
         ),
     )
 

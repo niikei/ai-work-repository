@@ -4,7 +4,7 @@
 
 ## Inbox
 
-Open items: **0**
+Open items: **0** | Needs review: **0** | Oldest: **none**
 
 _Inbox is clear._
 

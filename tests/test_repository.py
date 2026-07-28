@@ -284,6 +284,41 @@ def test_project_health_uses_the_controlled_vocabulary(repository: Path) -> None
     ]
 
 
+def test_frontmatter_rejects_duplicate_keys(repository: Path) -> None:
+    """A repeated key cannot be silently overwritten by the YAML loader."""
+    path = write_document(repository, "20-projects/example/index.md")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "status: active",
+            "status: planned\nstatus: active",
+        ),
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert len(messages) == 1
+    assert "found duplicate key 'status'" in messages[0]
+
+
+def test_unknown_frontmatter_field_requires_extension_prefix(repository: Path) -> None:
+    """Typos fail while explicitly namespaced extension fields remain available."""
+    path = write_document(repository, "20-projects/example/index.md")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "updated: 2026-07-28",
+            "udpated: 2026-07-28\nupdated: 2026-07-28\nx-owner: finance",
+        ),
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == [
+        "unknown frontmatter field: udpated; use x-* for custom fields",
+    ]
+
+
 def test_check_reports_broken_markdown_link(repository: Path) -> None:
     """Normal relative links are validated with a useful source line."""
     write_document(repository, "20-projects/example/index.md")
@@ -306,3 +341,57 @@ def test_check_ignores_links_in_code_blocks(repository: Path) -> None:
     )
 
     assert check_repository(repository) == []
+
+
+def test_rejects_duplicate_keys_in_repository_yaml(repository: Path) -> None:
+    config = repository / "settings.yaml"
+    config.write_text("mode: safe\nmode: fast\n", encoding="utf-8")
+
+    issues = check_repository(repository)
+
+    assert any(
+        issue.path == Path("settings.yaml") and "duplicate key" in issue.message for issue in issues
+    )
+
+
+def test_rejects_windows_reserved_path_component(repository: Path) -> None:
+    reserved = repository / "CON.txt"
+    reserved.write_text("portable content\n", encoding="utf-8")
+
+    issues = check_repository(repository)
+
+    assert any("reserved on Windows" in issue.message for issue in issues)
+
+
+def test_rejects_file_over_configured_size(repository: Path) -> None:
+    policy = repository / ".workspace/policy.yaml"
+    policy.write_text(
+        policy.read_text(encoding="utf-8").replace(
+            "max_attachment_bytes: 26214400",
+            "max_attachment_bytes: 10",
+        ),
+        encoding="utf-8",
+    )
+    attachment = repository / "attachment.bin"
+    attachment.write_bytes(b"01234567890")
+
+    issues = check_repository(repository)
+
+    assert any(
+        issue.path == Path("attachment.bin") and "size limit" in issue.message for issue in issues
+    )
+
+
+def test_rejects_future_metadata_date(repository: Path) -> None:
+    path = write_document(repository, "20-projects/example/index.md")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "updated: 2026-07-28",
+            "updated: 2999-01-01",
+        ),
+        encoding="utf-8",
+    )
+
+    issues = check_repository(repository)
+
+    assert any(issue.message == "updated must not be in the future" for issue in issues)

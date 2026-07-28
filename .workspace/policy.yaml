@@ -1,0 +1,8 @@
+version: 1
+inbox:
+  warn_after_days: 7
+  block_after_days: 30
+  max_open_items: 50
+files:
+  max_attachment_bytes: 26214400
+  max_path_length: 240
