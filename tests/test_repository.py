@@ -15,7 +15,7 @@ from workrepo.repository import (
 
 PROJECT_ROOT = Path(__file__).parents[1]
 DUPLICATE_DOCUMENT_COUNT = 2
-INDEX_VERSION = 3
+INDEX_VERSION = 4
 
 
 def write_document(
@@ -366,6 +366,48 @@ related: [project:example]
     messages = [issue.message for issue in check_repository(repository)]
 
     assert messages == ["url contains sensitive query parameter: token"]
+
+
+def test_direct_external_link_is_indexed_without_promotion(repository: Path) -> None:
+    """Pasting a normal link is enough for AI discovery."""
+    project = write_document(repository, "20-projects/example/index.md")
+    project.write_text(
+        f"{project.read_text(encoding='utf-8')}"
+        "\n## Important documents\n\n"
+        "- [SaaS access register]"
+        "(https://tenant.sharepoint.com/sites/it/register.xlsx)\n",
+        encoding="utf-8",
+    )
+
+    payload = json.loads(build_index(repository).read_text(encoding="utf-8"))
+    entry = payload["documents"][0]
+
+    assert entry["derived"]["external_links"] == [
+        {
+            "label": "SaaS access register",
+            "url": "https://tenant.sharepoint.com/sites/it/register.xlsx",
+            "provider": "sharepoint",
+            "line": 15,
+        },
+    ]
+
+
+def test_direct_external_link_rejects_sensitive_query_parameter(
+    repository: Path,
+) -> None:
+    """Low-friction pasted links still receive local secret checks."""
+    project = write_document(repository, "20-projects/example/index.md")
+    project.write_text(
+        f"{project.read_text(encoding='utf-8')}"
+        "\n[Temporary share](https://example.com/file.xlsx?access_token=secret)\n",
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == [
+        "line 13: url contains sensitive query parameter: access_token",
+    ]
 
 
 def test_check_reports_broken_markdown_link(repository: Path) -> None:

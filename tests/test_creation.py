@@ -72,6 +72,7 @@ def test_create_log_with_existing_relationship(repository: Path) -> None:
     log_entry = next(item for item in payload["documents"] if item["type"] == "log")
     assert log_entry["derived"] == {
         "backlinks": [],
+        "external_links": [],
         "iso_week": "2026-W31",
         "week_start": "2026-07-27",
     }

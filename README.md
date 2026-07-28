@@ -55,7 +55,7 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
   --parent project:erp-upgrade \
   --kind weekly-report
 
-# SharePointなど外部にある原本への管理された案内を作成
+# 長期管理が必要になった外部原本を管理対象へ昇格
 uv run workrepo new artifact erp-scope \
   --title "ERP更改スコープ原本" \
   --parent project:erp-upgrade \
@@ -95,9 +95,21 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - 関係はファイルパスではなく`related`に安定IDを列挙します。
 - ProjectとAreaは親子にせず、多対多で関連付けます。
 - 物理ディレクトリは安定した所有場所を表し、表示上のgroupやArea別一覧は生成します。
-- Word、Excel、PowerPoint、SharePointなど外部の原本は`external-resource`としてURL、owner、
-  access、最終確認日を管理します。認証が必要なURLを通常検査でオンライン照会はしません。
-  パスワード、token、署名付きURLは記録しません。
+- SharePoint、Excel、PowerPointなどのリンクは、まず通常のMarkdownリンクとして直接貼ります。
+  貼られた外部リンクはラベル、URL、provider、記載元とともにAI向け索引へ自動収録されます。
+- 複数箇所から参照する正式な原本、owner・access・最終確認日の管理が必要なリンクだけを
+  `external-resource`へ昇格します。認証が必要なURLをオンライン照会はしません。
+- パスワード、token、署名付きURLは通常Markdownにも`external-resource`にも記録しません。
+
+例えば会議中は、LogやProjectへそのまま貼るだけで構いません。
+
+```markdown
+## References
+
+- [ERP更改対象一覧](https://example.com/sites/erp/scope.xlsx)
+```
+
+「直接貼る → 重要になったら管理対象へ昇格」が標準ワークフローです。
 
 詳しい判断基準は
 [分類ガイド](40-library/40-references/classification-guide.md)と

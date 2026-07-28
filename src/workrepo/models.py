@@ -46,6 +46,7 @@ class MarkdownLink:
 
     target: str
     line: int
+    label: str
 
 
 ContentDocument = Document | Artifact

@@ -6,7 +6,7 @@ from collections import Counter
 from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
-from urllib.parse import parse_qsl, unquote, urlsplit
+from urllib.parse import SplitResult, parse_qsl, unquote, urlsplit
 
 import yaml
 
@@ -37,7 +37,18 @@ EXTERNAL_RESOURCE_FIELDS = frozenset(
 )
 EXTERNAL_ACCESS_VALUES = frozenset({"internal", "restricted", "public"})
 SENSITIVE_QUERY_KEYS = frozenset(
-    {"access_token", "api_key", "apikey", "key", "password", "secret", "signature", "token"},
+    {
+        "access_token",
+        "api_key",
+        "apikey",
+        "key",
+        "password",
+        "secret",
+        "sig",
+        "signature",
+        "token",
+        "x-amz-signature",
+    },
 )
 
 
@@ -505,19 +516,7 @@ def _validate_external_url(artifact: Artifact) -> list[Issue]:
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
         return [Issue(artifact.path, "url must be an HTTP or HTTPS URL")]
-    issues: list[Issue] = []
-    if parsed.username is not None or parsed.password is not None:
-        issues.append(Issue(artifact.path, "url must not contain embedded credentials"))
-    query_keys = {key.casefold() for key, _ in parse_qsl(parsed.query)}
-    sensitive = sorted(query_keys & SENSITIVE_QUERY_KEYS)
-    if sensitive:
-        issues.append(
-            Issue(
-                artifact.path,
-                f"url contains sensitive query parameter: {', '.join(sensitive)}",
-            ),
-        )
-    return issues
+    return [Issue(artifact.path, message) for message in _url_security_messages(parsed)]
 
 
 def _validate_related(document: ContentDocument) -> list[Issue]:
@@ -611,6 +610,8 @@ def _validate_markdown_link(
         parsed = urlsplit(target)
     except ValueError:
         return Issue(source.relative_to(root), f"line {line}: invalid link: {target}")
+    if parsed.scheme in {"http", "https"}:
+        return _external_markdown_issue(root, source, parsed, line)
     if parsed.scheme or parsed.netloc or not parsed.path:
         return None
 
@@ -631,3 +632,28 @@ def _validate_markdown_link(
         source.relative_to(root),
         f"line {line}: linked path does not exist: {target}",
     )
+
+
+def _external_markdown_issue(
+    root: Path,
+    source: Path,
+    parsed: SplitResult,
+    line: int,
+) -> Issue | None:
+    if parsed.hostname is None:
+        return Issue(source.relative_to(root), f"line {line}: external URL has no hostname")
+    messages = _url_security_messages(parsed)
+    if not messages:
+        return None
+    return Issue(source.relative_to(root), f"line {line}: {messages[0]}")
+
+
+def _url_security_messages(parsed: SplitResult) -> list[str]:
+    messages: list[str] = []
+    if parsed.username is not None or parsed.password is not None:
+        messages.append("url must not contain embedded credentials")
+    query_keys = {key.casefold() for key, _ in parse_qsl(parsed.query)}
+    sensitive = sorted(query_keys & SENSITIVE_QUERY_KEYS)
+    if sensitive:
+        messages.append(f"url contains sensitive query parameter: {', '.join(sensitive)}")
+    return messages

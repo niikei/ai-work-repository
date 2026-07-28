@@ -20,8 +20,9 @@ description: Create or update validated Markdown work records with canonical met
    uncertainty and do not fabricate business facts.
 7. Keep event history in Logs and current state in Project or Area documents. Replace superseded
    state; do not append text that contradicts the current state.
-8. For Word, Excel, PowerPoint, SharePoint, and similar originals, create an `external-resource`
-   artifact. Record provider, owner, access class, and last verification date; never record secrets.
+8. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
+   relevant Markdown. Create an `external-resource` only when a shared original needs durable owner,
+   access class, or verification metadata. Never record secrets or signed URLs.
 9. Do not edit generated related-link blocks, `DASHBOARD.md`, or `NAVIGATION.md` directly.
 10. Run `uv run workrepo refresh` and `uv run workrepo check`.
 

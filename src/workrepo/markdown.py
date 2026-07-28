@@ -44,11 +44,26 @@ def _inline_links(token: Token) -> list[MarkdownLink]:
         return []
     line = token.map[0] + 1 if token.map is not None else 1
     links: list[MarkdownLink] = []
-    for child in token.children:
+    for index, child in enumerate(token.children):
         attribute = "href" if child.type == "link_open" else "src"
         if child.type not in {"link_open", "image"}:
             continue
         target = child.attrGet(attribute)
         if isinstance(target, str):
-            links.append(MarkdownLink(target=target, line=line))
+            label = (
+                child.content.strip()
+                if child.type == "image"
+                else _link_label(token.children, index)
+            )
+            links.append(MarkdownLink(target=target, line=line, label=label))
     return links
+
+
+def _link_label(children: list[Token], opening_index: int) -> str:
+    parts: list[str] = []
+    for child in children[opening_index + 1 :]:
+        if child.type == "link_close":
+            break
+        if child.type in {"text", "code_inline"}:
+            parts.append(child.content)
+    return "".join(parts).strip()

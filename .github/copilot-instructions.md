@@ -14,8 +14,9 @@ files are user-owned records; accuracy and traceability are more important than 
 - Preserve uncertainty. Do not invent decisions, owners, deadlines, completion, or relationships.
 - Use `uv run workrepo list` and `uv run workrepo search` before scanning large directory trees.
 - Do not maintain a manual Project list in an Area; `related` and generated navigation are canonical.
-- Use `external-resource` for durable Word, Excel, PowerPoint, and SharePoint links. Never record
-  credentials, access tokens, or signed URLs.
+- Allow ordinary Word, Excel, PowerPoint, and SharePoint URLs to be pasted directly into relevant
+  Markdown. Promote only durable shared originals needing owner, access, or verification metadata
+  to `external-resource`. Never record credentials, access tokens, or signed URLs.
 - Do not edit `DASHBOARD.md`, `NAVIGATION.md`, or `workrepo:related` blocks directly; run
   `uv run workrepo refresh`.
 - Do not move, delete, archive, or broadly rewrite records without explicit authorization.

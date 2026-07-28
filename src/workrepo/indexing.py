@@ -3,8 +3,10 @@
 import json
 from datetime import UTC, date, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from workrepo.calendar import work_week
+from workrepo.markdown import inspect_markdown
 from workrepo.models import Artifact, ContentDocument, Document
 from workrepo.review import next_review
 from workrepo.state import RepositoryState
@@ -21,11 +23,11 @@ def build_index(root: Path, *, state: RepositoryState | None = None) -> Path:
     artifacts = repository_state.artifacts
     backlinks = _backlinks([*documents, *artifacts])
     entries = [
-        *(_entity_entry(document, backlinks) for document in documents),
-        *(_artifact_entry(artifact, backlinks) for artifact in artifacts),
+        *(_entity_entry(repository_root, document, backlinks) for document in documents),
+        *(_artifact_entry(repository_root, artifact, backlinks) for artifact in artifacts),
     ]
     payload = {
-        "version": 3,
+        "version": 4,
         "documents": sorted(entries, key=lambda item: str(item["path"])),
     }
     output = repository_root / INDEX_OUTPUT
@@ -38,6 +40,7 @@ def build_index(root: Path, *, state: RepositoryState | None = None) -> Path:
 
 
 def _entity_entry(
+    root: Path,
     document: Document,
     backlinks: dict[str, list[str]],
 ) -> dict[str, object]:
@@ -52,11 +55,13 @@ def _entity_entry(
         "derived": {
             **_derived_values(document),
             "backlinks": backlinks.get(str(metadata["id"]), []),
+            "external_links": _external_links(root, document),
         },
     }
 
 
 def _artifact_entry(
+    root: Path,
     artifact: Artifact,
     backlinks: dict[str, list[str]],
 ) -> dict[str, object]:
@@ -72,6 +77,7 @@ def _artifact_entry(
         "derived": {
             "parent_id": artifact.parent_id,
             "backlinks": backlinks.get(str(artifact_id), []) if artifact_id is not None else [],
+            "external_links": _external_links(root, artifact),
         },
     }
 
@@ -132,3 +138,29 @@ def _date_value(value: object) -> date | None:
         return date.fromisoformat(value)
     except ValueError:
         return None
+
+
+def _external_links(root: Path, document: ContentDocument) -> list[dict[str, object]]:
+    try:
+        source = (root / document.path).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return []
+    return [
+        {
+            "label": link.label,
+            "url": link.target,
+            "provider": _provider(link.target),
+            "line": link.line,
+        }
+        for link in inspect_markdown(source).links
+        if urlsplit(link.target).scheme in {"http", "https"}
+    ]
+
+
+def _provider(target: str) -> str:
+    hostname = (urlsplit(target).hostname or "").casefold()
+    if hostname.endswith(".sharepoint.com"):
+        return "sharepoint"
+    if hostname.endswith((".office.com", ".microsoft365.com")):
+        return "microsoft-365"
+    return "web"

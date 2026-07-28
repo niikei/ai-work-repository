@@ -45,8 +45,9 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
 ```
 
 `kind`は`weekly-report`、`report`、`analysis`、`specification`、`deliverable`、
-`attachment-note`、`note`から選びます。状態は`draft`、`active`、`final`、
-`superseded`です。所有するProjectまたはAreaは`related`へ必ず含まれます。
+`attachment-note`、`note`、`review`、`control`、`external-resource`から選びます。
+状態は`draft`、`active`、`final`、`superseded`です。所有するProjectまたはAreaは
+`related`へ必ず含まれます。
 
 期間を持つArtifactには`period_start`と`period_end`を対で追加できます。終了日は開始日より
 前にできません。
@@ -54,8 +55,12 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
 ## 機械向け索引
 
 `.workspace/indexes/documents.json`は生成物です。各Artifactには所有元の`parent_id`、
-各管理対象には自分を参照する`backlinks`が導出されます。直接編集せず、
+各管理対象には自分を参照する`backlinks`と、本文へ直接貼られた`external_links`が
+導出されます。外部リンクにはラベル、URL、provider、行番号が含まれます。直接編集せず、
 `workrepo refresh`で再生成します。
+
+外部リンクは通常のMarkdownへ直接貼るのが既定です。複数文書から参照する正式な原本や、
+owner・access・最終確認日の管理が必要になったリンクだけを`external-resource`へ昇格します。
 
 ## Related documents
 
