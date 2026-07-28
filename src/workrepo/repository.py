@@ -5,6 +5,7 @@ from pathlib import Path
 
 from workrepo.dashboard import generate_dashboard
 from workrepo.indexing import INDEX_OUTPUT, build_index
+from workrepo.navigation import generate_navigation
 from workrepo.relations import sync_related_links
 from workrepo.validation import check_repository, read_documents, require_repository
 
@@ -16,6 +17,7 @@ class RefreshResult:
     linked_documents: int
     index_path: Path
     dashboard_path: Path
+    navigation_path: Path
 
 
 def refresh_repository(root: Path) -> RefreshResult:
@@ -24,10 +26,12 @@ def refresh_repository(root: Path) -> RefreshResult:
     linked_documents = sync_related_links(root, state=state)
     index_path = build_index(root, state=state)
     dashboard_path = generate_dashboard(root, state=state)
+    navigation_path = generate_navigation(root, state=state)
     return RefreshResult(
         linked_documents=linked_documents,
         index_path=index_path,
         dashboard_path=dashboard_path,
+        navigation_path=navigation_path,
     )
 
 

@@ -137,3 +137,38 @@ def test_cli_reports_missing_repository_without_traceback(
     output = capsys.readouterr().out
     assert output.startswith("ERROR no work repository found")
     assert "Traceback" not in output
+
+
+def test_cli_list_and_search_are_human_readable(
+    repository: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Large repositories can be filtered without opening generated JSON."""
+    project = repository / "20-projects/erp-upgrade/index.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        """---
+type: project
+id: project:erp-upgrade
+status: active
+health: amber
+created: 2026-07-29
+updated: 2026-07-29
+related: []
+---
+
+# ERP Upgrade
+
+Cutover planning.
+""",
+        encoding="utf-8",
+    )
+
+    assert main(("--root", str(repository), "list", "--type", "project")) == 0
+    list_output = capsys.readouterr().out
+    assert "project:erp-upgrade" in list_output
+    assert "ERP Upgrade" in list_output
+
+    assert main(("--root", str(repository), "search", "cutover")) == 0
+    search_output = capsys.readouterr().out
+    assert "ERP Upgrade" in search_output

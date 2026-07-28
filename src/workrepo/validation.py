@@ -31,7 +31,7 @@ IGNORED_MARKDOWN_DIRECTORIES = frozenset(
         ".workspace",
     },
 )
-GENERATED_MARKDOWN_FILES = frozenset({"DASHBOARD.md"})
+GENERATED_MARKDOWN_FILES = frozenset({"DASHBOARD.md", "NAVIGATION.md"})
 
 
 def check_repository(root: Path) -> list[Issue]:

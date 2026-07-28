@@ -1,10 +1,12 @@
 """Command-line interface for repository maintenance."""
 
+from __future__ import annotations
+
 import argparse
-from collections.abc import Sequence
 from datetime import date
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from workrepo.creation import (
     ARTIFACT_DIRECTORIES,
@@ -24,6 +26,7 @@ from workrepo.gitops import (
     hooks_active,
     install_hooks,
 )
+from workrepo.navigation import ContentFilter, display_row, list_content, search_content
 from workrepo.repository import (
     build_index,
     refresh_repository,
@@ -31,6 +34,9 @@ from workrepo.repository import (
 )
 from workrepo.root import find_repository_root
 from workrepo.validation import inbox_report, require_repository
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 PACKAGE_NAME = "ai-work-repository"
 COMMAND_ERRORS = (OSError, RuntimeError, TypeError, ValueError)
@@ -60,6 +66,8 @@ def _dispatch(
         return _run_new_command(root, args)
     if args.command == "capture":
         return _run_capture(root, args.text, capture_date=args.date)
+    if args.command in {"list", "search"}:
+        return _run_browse(root, args)
     return _dispatch_auxiliary(parser, args, root)
 
 
@@ -174,8 +182,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     subparsers.add_parser(
         "refresh",
-        help="synchronize links, machine index, and dashboard",
+        help="synchronize links, indexes, dashboard, and navigation",
     )
+    _add_browse_commands(subparsers)
     inbox_parser = subparsers.add_parser(
         "inbox",
         help="inspect and review temporary capture",
@@ -207,6 +216,41 @@ def _build_parser() -> argparse.ArgumentParser:
     hooks_subparsers.add_parser("status", help="show whether managed hooks are active")
     subparsers.add_parser("doctor", help="diagnose local repository setup")
     return parser
+
+
+def _add_browse_commands(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    list_parser = subparsers.add_parser(
+        "list",
+        help="list repository content with explicit filters",
+    )
+    _add_content_filters(list_parser)
+    search_parser = subparsers.add_parser(
+        "search",
+        help="search titles, IDs, metadata, and Markdown text",
+    )
+    search_parser.add_argument("query", help="one or more words; every word must match")
+    _add_content_filters(search_parser)
+
+
+def _add_content_filters(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--type",
+        dest="document_type",
+        choices=(*DOCUMENT_TYPES, "artifact"),
+        help="only this content type",
+    )
+    parser.add_argument("--status", help="only this lifecycle status")
+    parser.add_argument("--health", help="only this health value")
+    parser.add_argument("--area", dest="area_id", help="only content related to this Area ID")
+    parser.add_argument("--group", help="only Areas in this group")
+    parser.add_argument(
+        "--limit",
+        type=_positive_int,
+        default=50,
+        help="maximum rows (default: 50)",
+    )
 
 
 def _run_check(root: Path, *, staged: bool, strict: bool) -> int:
@@ -337,8 +381,35 @@ def _run_refresh(root: Path) -> int:
         "Repository refreshed: "
         f"{result.linked_documents} linked document(s), "
         f"{result.index_path.relative_to(root.resolve())}, "
-        f"{result.dashboard_path.relative_to(root.resolve())}.",
+        f"{result.dashboard_path.relative_to(root.resolve())}, "
+        f"{result.navigation_path.relative_to(root.resolve())}.",
     )
+    return 0
+
+
+def _run_browse(root: Path, args: argparse.Namespace) -> int:
+    try:
+        state = require_repository(root)
+        filters = ContentFilter(
+            document_type=args.document_type,
+            status=args.status,
+            health=args.health,
+            area_id=args.area_id,
+            group=args.group,
+        )
+        items = (
+            search_content(state, args.query, filters=filters, limit=args.limit)
+            if args.command == "search"
+            else list_content(state, filters=filters, limit=args.limit)
+        )
+    except COMMAND_ERRORS as error:
+        print(f"ERROR {error}")
+        return 1
+    if not items:
+        print("No matching content.")
+        return 0
+    for item in items:
+        print(display_row(item))
     return 0
 
 
