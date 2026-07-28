@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from workrepo.gitops import check_worktree
 from workrepo.repository import (
     INDEX_OUTPUT,
     build_index,
@@ -316,6 +317,21 @@ def test_unknown_frontmatter_field_requires_extension_prefix(repository: Path) -
 
     assert messages == [
         "unknown frontmatter field: udpated; use x-* for custom fields",
+    ]
+
+
+def test_empty_project_subdirectory_is_a_non_blocking_warning(
+    repository: Path,
+) -> None:
+    """Explorer clutter is reported without making an in-progress edit invalid."""
+    empty = repository / "20-projects/example/reports"
+    empty.mkdir(parents=True)
+
+    report = check_worktree(repository)
+
+    assert report.errors == ()
+    assert [str(issue) for issue in report.warnings] == [
+        "20-projects/example/reports: empty directory can be removed",
     ]
 
 

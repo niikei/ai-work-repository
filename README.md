@@ -13,7 +13,8 @@
 | [`30-areas/`](30-areas/README.md) | 継続的な責任は健全か | ERP運用、アクセス管理 |
 | [`40-library/`](40-library/README.md) | 今後も参照する知識は何か | 役割、システム、手順、資料 |
 
-[Dashboard](DASHBOARD.md)には、未処理Inbox、進行中Project、Areaの現在状態を集約します。
+[Dashboard](DASHBOARD.md)には現在状態を、[Navigation](NAVIGATION.md)にはArea別・group別の
+探索導線を集約します。
 
 `inbox`は文書の種類ではなく一時的な状態です。定期的に整理し、残し続けません。
 完了したProjectなどは移動せず、`status`を変更します。これによりリンク切れを防ぎます。
@@ -57,6 +58,11 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
 # 検証と生成物の更新
 uv run workrepo check
 uv run workrepo refresh
+
+# 大量の文書を型・状態・Areaで絞り込む
+uv run workrepo list --type project --status active
+uv run workrepo list --type project --area area:erp-operations
+uv run workrepo search "cutover decision" --type artifact
 ```
 
 `new`は日付、ID、保存先、frontmatterをテンプレートから生成し、存在しない関連IDや
@@ -78,6 +84,7 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - `id`は`project:erp-upgrade`のような種類付きの安定IDにします。
 - 関係はファイルパスではなく`related`に安定IDを列挙します。
 - ProjectとAreaは親子にせず、多対多で関連付けます。
+- 物理ディレクトリは安定した所有場所を表し、表示上のgroupやArea別一覧は生成します。
 - Word、Excel、PDF、画像の原本は保持し、必要なら同じ場所にMarkdownの説明を添えます。
 
 詳しい判断基準は

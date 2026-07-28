@@ -19,6 +19,8 @@ ARTIFACT_DIRECTORIES = {
     "deliverable": "deliverables",
     "attachment-note": "assets",
     "note": "notes",
+    "review": "reviews",
+    "control": "controls",
 }
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MAX_SLUG_LENGTH = 64
@@ -96,8 +98,12 @@ def create_document(
 
     template_path = repository_root / schema.templates_root / f"{request.document_type}.md"
     if request.template_name is not None:
-        if request.document_type != "log" or request.template_name not in {"log", "meeting"}:
-            message = "template selection is only supported for log and meeting"
+        if request.document_type != "log" or request.template_name not in {
+            "log",
+            "meeting",
+            "daily",
+        }:
+            message = "template selection is only supported for log, meeting, and daily"
             raise ValueError(message)
         template_path = repository_root / schema.templates_root / f"{request.template_name}.md"
     template = template_path.read_text(encoding="utf-8")

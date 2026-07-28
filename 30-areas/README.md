@@ -7,3 +7,22 @@ Areaごとに`30-areas/<slug>/index.md`を作り、期待する状態、健康�
 
 `status`は責任領域のライフサイクル、`health`は現在の健全性です。`review_cycle`と
 `last_reviewed`を更新すると、Dashboardが次回レビュー日と期限超過を表示します。
+
+`group`は、ファイル配置を変えずに近いAreaを表示上まとめる任意の分類です。組織変更時も
+リンクを壊さず変更できます。責任の親子関係が本当に必要になるまでは、Area自体を物理的に
+ネストしません。
+
+Areaの詳細が増えたら、必要なものだけ次のディレクトリへ分けます。
+
+```text
+reviews/     定期レビューと状態変化の履歴
+controls/    継続的な統制・チェック
+metrics/     指標の定義と出力
+operations/  運用固有の資料
+references/  Area固有の参照資料
+links/       外部システム上の資料への案内
+assets/      画像・添付原本またはその説明
+```
+
+Areaの`index.md`には現在の状態だけを残し、過去の状態はLogまたは`reviews/`へ記録します。
+関連Projectの手書き一覧は持たず、frontmatterの`related`と生成ナビゲーションを正にします。

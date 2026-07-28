@@ -73,7 +73,31 @@ def inbox_report(
 
 def repository_warnings(state: RepositoryState) -> list[Issue]:
     """Return non-blocking findings for a valid or invalid repository state."""
-    return list(inbox_report(state).warnings)
+    return [*inbox_report(state).warnings, *_empty_directory_warnings(state)]
+
+
+def _empty_directory_warnings(state: RepositoryState) -> list[Issue]:
+    roots = (state.schema.types["project"].root, state.schema.types["area"].root)
+    warnings: list[Issue] = []
+    for relative_root in roots:
+        root = state.root / relative_root
+        if not root.is_dir():
+            continue
+        for path in root.rglob("*"):
+            if not path.is_dir():
+                continue
+            try:
+                empty = next(path.iterdir(), None) is None
+            except OSError:
+                continue
+            if empty:
+                warnings.append(
+                    Issue(
+                        path.relative_to(state.root),
+                        "empty directory can be removed",
+                    ),
+                )
+    return sorted(warnings)
 
 
 def require_repository(root: Path) -> RepositoryState:

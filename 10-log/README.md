@@ -20,3 +20,12 @@ Logは月ではなく、月曜日の開始日を表す週ディレクトリへ�
 
 Logは履歴と根拠であり、ProjectやAreaの現在状態そのものではありません。重要な変化は
 関連する`index.md`にも反映します。
+
+電話・メール・短い作業が多い日は、出来事ごとにファイルを増やさず、日次Logへまとめられます。
+
+```shell
+uv run workrepo new log daily --title "2026-07-29 Daily Log" --template daily
+```
+
+未整理の思いつきはInbox、後から参照する一回の出来事はLog、継続的に追う次の行動は
+ProjectまたはAreaへ置くのが基準です。

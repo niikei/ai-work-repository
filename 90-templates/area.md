@@ -7,6 +7,7 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 review_cycle: monthly
 last_reviewed: YYYY-MM-DD
+group: ungrouped
 related: []
 ---
 
@@ -19,7 +20,5 @@ related: []
 ## Current health
 
 ## Signals
-
-## Active projects
 
 ## Concerns

@@ -76,6 +76,26 @@ def test_create_log_with_existing_relationship(repository: Path) -> None:
     }
 
 
+def test_create_daily_log_consolidates_small_events(repository: Path) -> None:
+    """A daily template avoids one file per low-value call or email."""
+    path = create_document(
+        repository,
+        CreateRequest(
+            document_type="log",
+            slug="daily",
+            title="2026-07-29 Daily Log",
+            document_date=DOCUMENT_DATE,
+            template_name="daily",
+        ),
+    )
+
+    content = path.read_text(encoding="utf-8")
+    assert path.name == "2026-07-29-daily.md"
+    assert "## Calls and messages" in content
+    assert "## Decisions" in content
+    assert check_repository(repository) == []
+
+
 def test_create_rejects_unknown_relationship(repository: Path) -> None:
     """A typo in a relationship cannot create an invalid document."""
     request = CreateRequest(

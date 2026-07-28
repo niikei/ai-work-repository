@@ -158,7 +158,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     new_parser.add_argument(
         "--template",
-        choices=("log", "meeting"),
+        choices=("log", "meeting", "daily"),
         help="content template for a log (default: log)",
     )
     new_parser.add_argument(
