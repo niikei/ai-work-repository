@@ -100,6 +100,19 @@ uv run workrepo refresh
 生成された`workrepo:related`マーカー内は直接編集せず、frontmatterの`related`を変更して
 再実行してください。詳細は[Obsidian利用ガイド](OBSIDIAN.md)にあります。
 
+## GitHub Copilot
+
+VS CodeのCopilot Agent Mode向けに、常時適用するinstructions、パス別instructions、
+必要時だけ読み込むAgent Skills、手動実行するprompt、専用Agentを共有しています。
+
+- Chatで`/process-inbox`：Inboxを読み取り、変更前に分類案を提示
+- Chatで`/weekly-review`：期間内の記録を根拠付きで週次レビュー
+- Agent選択で`Work Repository Steward`：複数文書にまたがる整理を安全に支援
+
+Copilotの提案は品質ゲートではありません。変更後は`workrepo check`、commit時はGit hookが
+決定的に検査します。設定の読み込み状況はVS Code ChatのReferencesまたはCustomization
+Diagnosticsで確認できます。
+
 ## セットアップ
 
 Python 3.12以上と[uv](https://docs.astral.sh/uv/)を用意し、次を実行します。

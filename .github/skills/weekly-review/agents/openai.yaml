@@ -1,0 +1,4 @@
+interface:
+  display_name: "Weekly Review"
+  short_description: "Review work state and prepare a grounded weekly summary"
+  default_prompt: "Use $weekly-review to review this week and propose the next actions."

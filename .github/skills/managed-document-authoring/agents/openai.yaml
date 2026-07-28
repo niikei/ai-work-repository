@@ -1,0 +1,4 @@
+interface:
+  display_name: "Managed Document Authoring"
+  short_description: "Create valid work records with canonical metadata"
+  default_prompt: "Use $managed-document-authoring to create this work record safely."

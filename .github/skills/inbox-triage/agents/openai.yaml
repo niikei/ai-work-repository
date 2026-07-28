@@ -1,0 +1,4 @@
+interface:
+  display_name: "Inbox Triage"
+  short_description: "Safely classify and process temporary Inbox items"
+  default_prompt: "Use $inbox-triage to review and classify the current Inbox."

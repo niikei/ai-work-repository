@@ -1,24 +1,22 @@
 # AI-ready work repository instructions
 
-- Treat Markdown and original documents in this repository as user-owned work records.
-- Read the nearest `index.md` before making changes within a Project or Area.
-- Use the document's single level-one heading as its canonical title; do not duplicate it in frontmatter.
-- Preserve YAML frontmatter fields that are not part of the requested change.
-- Treat frontmatter `related` IDs as canonical relationships.
-- Do not manually edit content between `workrepo:related` markers; run `workrepo refresh`.
-- Do not edit `DASHBOARD.md` directly; it is generated from Inbox, Project, and Area state.
-- Prefer `workrepo new` and `workrepo capture` when creating managed content.
-- Use `workrepo new artifact` for durable reports, analyses, specifications, and deliverables.
-- Frontmatter-free Project or Area Markdown is lightweight working material. If frontmatter exists, it must satisfy the typed Artifact contract.
-- Keep Area lifecycle `status`, current `health`, and `last_reviewed` semantically separate.
-- Do not edit original Word, Excel, PDF, or image files unless explicitly requested.
-- Keep generated and temporary document data under `.workspace/cache/` or `.workspace/indexes/`.
-- Do not move, delete, archive, or broadly rewrite documents without explicit confirmation.
-- Keep Project and Area as separate concepts; represent their many-to-many relationship with metadata and links.
-- Record events in `10-log/`; keep current state in the related Project or Area.
-- Treat `00-inbox/` as temporary capture state, not a permanent document type.
-- Put repository-maintenance code in `src/workrepo/` and small Project-specific code inside that Project.
-- Assume every tracked file may be shared with both private GitHub and the configured AI.
-- Keep material that is not allowed in either system physically outside this repository.
-- Use TermKeeper through its public CLI, MCP, or HTTP interface and never access its database directly.
-- Report possible sensitive information before adding it to Git.
+This repository is a local-first work record shared by a human and AI. Markdown content and original
+files are user-owned records; accuracy and traceability are more important than aggressive cleanup.
+
+- Read `README.md` and the nearest Project or Area `index.md` before changing managed content.
+- Use the H1 as the canonical title. Do not add `title` to YAML frontmatter.
+- Treat stable IDs and frontmatter `related` values as canonical relationships.
+- Keep events in `10-log/`; keep current state in the related Project or Area.
+- Treat `00-inbox/` as temporary capture. Use `uv run workrepo capture`, not ad hoc Inbox files.
+- Prefer `uv run workrepo new` when creating managed content.
+- Preserve `created`; update `updated` when changing canonical content.
+- Preserve uncertainty. Do not invent decisions, owners, deadlines, completion, or relationships.
+- Do not edit `DASHBOARD.md` or `workrepo:related` blocks directly; run `uv run workrepo refresh`.
+- Do not move, delete, archive, or broadly rewrite records without explicit authorization.
+- Do not edit Word, Excel, PDF, or image originals unless explicitly requested.
+- Keep data that cannot be shared with the configured Git or AI physically outside this repository.
+- Run `uv run workrepo refresh` and `uv run workrepo check` after managed-document changes.
+- Do not commit or push unless the user explicitly requests it.
+
+Use the repository Agent Skills for Inbox triage, weekly review, and managed-document authoring.
+Use TermKeeper only through its public CLI, MCP, or HTTP interface.
