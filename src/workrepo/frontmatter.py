@@ -4,10 +4,10 @@ from pathlib import Path
 
 import yaml
 
+from workrepo.markdown import inspect_markdown
 from workrepo.models import Document
 
 FRONTMATTER_MARKER = "---"
-H1_PREFIX = "# "
 
 
 class DocumentParseError(ValueError):
@@ -30,11 +30,7 @@ def parse_document(path: Path, *, root: Path) -> Document:
         raise DocumentParseError(message) from error
 
     metadata = _load_metadata("\n".join(lines[1:closing_index]))
-    headings = [
-        line.removeprefix(H1_PREFIX).strip()
-        for line in lines[closing_index + 1 :]
-        if line.startswith(H1_PREFIX)
-    ]
+    headings = inspect_markdown("\n".join(lines[closing_index + 1 :])).headings
     if len(headings) != 1:
         message = f"expected exactly one H1 heading, found {len(headings)}"
         raise DocumentParseError(message)

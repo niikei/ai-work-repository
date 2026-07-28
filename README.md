@@ -13,18 +13,49 @@
 | [`30-areas/`](30-areas/README.md) | 継続的な責任は健全か | ERP運用、アクセス管理 |
 | [`40-library/`](40-library/README.md) | 今後も参照する知識は何か | 役割、システム、手順、資料 |
 
+[Dashboard](DASHBOARD.md)には、未処理Inbox、進行中Project、Areaの現在状態を集約します。
+
 `inbox`は文書の種類ではなく一時的な状態です。定期的に整理し、残し続けません。
 完了したProjectなどは移動せず、`status`を変更します。これによりリンク切れを防ぎます。
 
 ## 基本ワークフロー
 
-1. 判断に迷う情報は`00-inbox/`へ短く記録する。
-2. 起きた事実は`10-log/YYYY/MM/`へ記録する。
+1. 判断に迷う情報は`workrepo capture`で`00-inbox/`へ短く記録する。
+2. 起きた事実や新しい管理対象は`workrepo new`で作成する。
 3. 現在の状態や次の行動は、関連するProjectまたはAreaの`index.md`へ反映する。
 4. 繰り返し使う知識は`40-library/`へ整理する。
 5. `uv run workrepo check`で構造とリンクを検証する。
-6. `uv run workrepo links`でObsidian向けの文書リンクを同期する。
-7. `uv run workrepo index`でAIやツール向けの索引を生成する。
+6. レビュー前に`uv run workrepo refresh`でリンク、AI向け索引、Dashboardを更新する。
+
+## 日常コマンド
+
+```shell
+# 迷った情報を今日のInboxへ追加
+uv run workrepo capture "在庫連携の監視手順を確認する"
+
+# Areaを作成
+uv run workrepo new area erp-operations --title "ERP運用"
+
+# Areaに関連するProjectを作成
+uv run workrepo new project erp-upgrade \
+  --title "ERP更改" \
+  --related area:erp-operations
+
+# 日付付きのLogを作成
+uv run workrepo new log upgrade-meeting \
+  --title "ERP更改定例会議" \
+  --related project:erp-upgrade
+
+# 検証と生成物の更新
+uv run workrepo check
+uv run workrepo refresh
+```
+
+`new`は日付、ID、保存先、frontmatterをテンプレートから生成し、存在しない関連IDや
+既存ファイルの上書きを拒否します。
+
+Logは`10-log/2026/2026-07-27-week/`のように、月曜日の開始日で週ごとに整理されます。
+AI向け索引には`2026-W31`のISO週番号も自動的に収録されます。
 
 ## 文書規約
 
@@ -32,6 +63,7 @@
 - 管理対象文書には、テンプレートに沿ったYAML frontmatterを付けます。
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
+- ProjectとArea配下のMarkdown成果物は、frontmatterがなくてもAI向け索引へ収録されます。
 - `id`は`project:erp-upgrade`のような種類付きの安定IDにします。
 - 関係はファイルパスではなく`related`に安定IDを列挙します。
 - ProjectとAreaは親子にせず、多対多で関連付けます。
@@ -50,7 +82,7 @@
 ObsidianのBacklinksとGraph Viewでも関係を利用できるようにします。
 
 ```shell
-uv run workrepo links
+uv run workrepo refresh
 ```
 
 生成された`workrepo:related`マーカー内は直接編集せず、frontmatterの`related`を変更して
@@ -63,7 +95,7 @@ Python 3.12以上と[uv](https://docs.astral.sh/uv/)を用意し、次を実行�
 ```shell
 uv sync
 uv run workrepo check
-uv run workrepo links
+uv run workrepo refresh
 uv run pytest
 uv run ruff check .
 ```

@@ -1,5 +1,7 @@
-version: 1
+version: 2
 title_source: first_h1
+inbox_root: 00-inbox
+templates_root: 90-templates
 required:
   - type
   - id

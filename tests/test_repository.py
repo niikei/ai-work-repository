@@ -1,7 +1,6 @@
 """Repository validation and indexing tests."""
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
@@ -12,19 +11,10 @@ from workrepo.repository import (
     check_repository,
     sync_related_links,
 )
-from workrepo.schema import SCHEMA_PATH
 
 PROJECT_ROOT = Path(__file__).parents[1]
 DUPLICATE_DOCUMENT_COUNT = 2
-
-
-@pytest.fixture
-def repository(tmp_path: Path) -> Path:
-    """Create a minimal work repository with the production schema."""
-    schema_target = tmp_path / SCHEMA_PATH
-    schema_target.parent.mkdir(parents=True)
-    shutil.copy(PROJECT_ROOT / SCHEMA_PATH, schema_target)
-    return tmp_path
+INDEX_VERSION = 2
 
 
 def write_document(
@@ -72,6 +62,8 @@ def test_build_index_contains_canonical_title(repository: Path) -> None:
     payload = json.loads(output.read_text(encoding="utf-8"))
 
     assert output == repository / INDEX_OUTPUT
+    assert payload["version"] == INDEX_VERSION
+    assert payload["documents"][0]["kind"] == "entity"
     assert payload["documents"][0]["title"] == "Example"
     assert payload["documents"][0]["metadata"]["created"] == "2026-07-28"
 
@@ -146,3 +138,43 @@ def test_sync_related_links_rejects_malformed_markers(repository: Path) -> None:
 
     with pytest.raises(ValueError, match="markers are malformed"):
         sync_related_links(repository)
+
+
+def test_build_index_includes_project_artifact(repository: Path) -> None:
+    """Project Markdown artifacts are discoverable without entity frontmatter."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/reports/weekly.md"
+    report.parent.mkdir(parents=True)
+    report.write_text("# Weekly report\n\nCurrent progress.\n", encoding="utf-8")
+
+    output = build_index(repository)
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    artifact = next(item for item in payload["documents"] if item["kind"] == "artifact")
+
+    assert artifact["id"] is None
+    assert artifact["title"] == "Weekly report"
+    assert artifact["path"] == "20-projects/example/reports/weekly.md"
+
+
+def test_check_reports_broken_markdown_link(repository: Path) -> None:
+    """Normal relative links are validated with a useful source line."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/report.md"
+    report.write_text("# Report\n\n[Missing](missing.md)\n", encoding="utf-8")
+
+    issues = check_repository(repository)
+
+    assert len(issues) == 1
+    assert issues[0].message == "line 3: linked path does not exist: missing.md"
+
+
+def test_check_ignores_links_in_code_blocks(repository: Path) -> None:
+    """Documentation examples do not create false-positive broken links."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/report.md"
+    report.write_text(
+        "# Report\n\n```markdown\n[Example](missing.md)\n```\n",
+        encoding="utf-8",
+    )
+
+    assert check_repository(repository) == []

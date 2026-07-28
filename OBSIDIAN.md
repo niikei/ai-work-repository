@@ -29,7 +29,7 @@ related:
 その後、リポジトリのルートで実行します。
 
 ```shell
-uv run workrepo links
+uv run workrepo refresh
 ```
 
 文書末尾に次のような標準Markdownリンクが生成されます。
@@ -45,6 +45,9 @@ uv run workrepo links
 
 これらのリンクはObsidianのBacklinksとGraph Viewで認識されます。マーカー内を直接編集しても
 次回の同期で置き換わるため、関係の変更は必ず`related`で行います。
+
+[Dashboard](DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
+ブックマークすると、Inbox、進行中Project、Areaへすぐ移動できます。
 
 ## Gitで共有するもの
 

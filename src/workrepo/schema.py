@@ -21,6 +21,8 @@ class TypeRule:
 class Schema:
     """Repository document schema."""
 
+    inbox_root: Path
+    templates_root: Path
     required: frozenset[str]
     types: dict[str, TypeRule]
 
@@ -29,6 +31,8 @@ def load_schema(root: Path) -> Schema:
     """Load and type-check the repository schema."""
     raw: object = yaml.safe_load((root / SCHEMA_PATH).read_text(encoding="utf-8"))
     schema_mapping = _mapping(raw, label="schema")
+    inbox_root = _path(schema_mapping.get("inbox_root"), label="inbox_root")
+    templates_root = _path(schema_mapping.get("templates_root"), label="templates_root")
     required = frozenset(_string_list(schema_mapping.get("required"), label="required"))
     raw_types = _mapping(schema_mapping.get("types"), label="types")
     type_rules = {
@@ -39,7 +43,12 @@ def load_schema(root: Path) -> Schema:
     if len(type_rules) != len(raw_types):
         message = "type names must be strings"
         raise ValueError(message)
-    return Schema(required=required, types=type_rules)
+    return Schema(
+        inbox_root=inbox_root,
+        templates_root=templates_root,
+        required=required,
+        types=type_rules,
+    )
 
 
 def _load_type_rule(name: str, raw: object) -> TypeRule:
@@ -67,3 +76,14 @@ def _string_list(raw: object, *, label: str) -> list[str]:
         message = f"{label} must be a list of strings"
         raise ValueError(message)
     return raw
+
+
+def _path(raw: object, *, label: str) -> Path:
+    if not isinstance(raw, str) or not raw:
+        message = f"{label} must be a non-empty path"
+        raise ValueError(message)
+    path = Path(raw)
+    if path.is_absolute() or ".." in path.parts:
+        message = f"{label} must stay inside the repository"
+        raise ValueError(message)
+    return path

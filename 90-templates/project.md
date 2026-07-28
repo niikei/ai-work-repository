@@ -2,6 +2,7 @@
 type: project
 id: project:short-name
 status: planned
+health: unknown
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 related: []
