@@ -1,26 +1,18 @@
----
-type: workspace
-status: active
----
-
 # AI-ready Work Repository
 
-仕事に関する文書、記録、補助ファイルを、人間とAIの双方が段階的に理解できる形で管理する。
+仕事に関する文書、コード、ローカル限定ファイルを、責務とGit境界を分けながら一つの
+VS Code workspaceで扱うためのテンプレート。
 
-## Entry points
+## Structure
 
-- [Inbox](inbox/index.md): 未整理の記録と受領ファイル
-- [Projects](projects/index.md): 完了条件のある仕事
-- [Areas](areas/index.md): 継続的に維持する責任領域
-- [Reference](reference/index.md): 再利用する参照資料
-- [Journal](journal/index.md): 日付を軸にした作業記録
-- [Archive](archive/index.md): 完了・廃止した文脈
+- [`work-repository/`](work-repository/README.md): 文書、記録、テンプレート、文書用ツール
+- [`code/`](code/README.md): 独立したGit履歴を持つコードリポジトリの配置先
+- [`local-private/`](local-private/README.md): GitおよびVS Code workspaceの対象外とする領域
+- [`ai-work.code-workspace`](ai-work.code-workspace): 文書とコードをまとめて開くVS Code設定
 
-## Principles
+## Safety boundaries
 
-- ファイル形式ではなく仕事の文脈を基準に配置する。
-- 各ProjectやAreaでは`index.md`を入口にする。
-- Word、Excel、画像などの原本は保持し、必要に応じてMarkdownの説明を添える。
-- 自動生成物は`.workspace/cache/`へ隔離する。
-- 機密性が高くGitやAIの対象にできないファイルは、リポジトリ外の`local-private/`へ置く。
+- `local-private/`では、この説明ファイル以外を親Gitリポジトリで追跡しない。
+- `code/`の子ディレクトリは必要に応じて独立したGitリポジトリとして管理する。
+- 実際の仕事文書を追加する前に、保存先、Git追跡、AI利用、外部送信の可否を確認する。
 - TermKeeperとはCLI、MCP、HTTPなどの公開インターフェースだけで連携する。

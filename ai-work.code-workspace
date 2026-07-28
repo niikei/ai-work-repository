@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "name": "Work Repository",
+      "path": "work-repository"
+    },
+    {
+      "name": "Code",
+      "path": "code"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.workspace/cache": true
+    },
+    "search.exclude": {
+      "**/.workspace/cache": true,
+      "**/node_modules": true
+    }
+  }
+}
