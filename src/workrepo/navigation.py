@@ -72,8 +72,7 @@ def generate_navigation(root: Path, *, state: RepositoryState | None = None) -> 
     areas = [
         document
         for document in repository_state.documents
-        if document.metadata.get("type") == "area"
-        and document.metadata.get("status") != "retired"
+        if document.metadata.get("type") == "area" and document.metadata.get("status") != "retired"
     ]
     active_projects = [
         project
@@ -116,8 +115,7 @@ def display_row(item: ContentDocument) -> str:
     health = str(item.metadata.get("health", "-"))
     identifier = str(item.metadata.get("id", "-"))
     return (
-        f"{document_type:<10} {status:<10} {health:<7} "
-        f"{identifier:<42} {item.title}  [{item.path}]"
+        f"{document_type:<10} {status:<10} {health:<7} {identifier:<42} {item.title}  [{item.path}]"
     )
 
 
@@ -198,8 +196,7 @@ def _project_by_area_section(
     if unassigned:
         lines.extend(("### No Area assigned", ""))
         lines.extend(
-            f"- {_document_link(project)}"
-            for project in sorted(unassigned, key=_sort_key)
+            f"- {_document_link(project)}" for project in sorted(unassigned, key=_sort_key)
         )
     if not projects:
         lines.append("_None._")
@@ -215,8 +212,7 @@ def _area_by_group_section(areas: list[Document]) -> tuple[str, ...]:
     for group, documents in sorted(grouped.items(), key=lambda item: item[0].casefold()):
         lines.extend((f"### {group}", ""))
         lines.extend(
-            f"- {_document_link(document)}"
-            for document in sorted(documents, key=_sort_key)
+            f"- {_document_link(document)}" for document in sorted(documents, key=_sort_key)
         )
         lines.append("")
     if not grouped:

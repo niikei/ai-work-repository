@@ -171,9 +171,7 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
     directory = ARTIFACT_DIRECTORIES[request.kind]
     destination = repository_root / parent.path.parent / directory / f"{request.slug}.md"
     _ensure_path_available(destination, repository_root)
-    template_name = (
-        "external-resource.md" if request.kind == "external-resource" else "artifact.md"
-    )
+    template_name = "external-resource.md" if request.kind == "external-resource" else "artifact.md"
     template = (repository_root / schema.templates_root / template_name).read_text(
         encoding="utf-8",
     )

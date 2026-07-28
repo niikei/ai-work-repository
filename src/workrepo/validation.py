@@ -472,8 +472,7 @@ def _validate_external_resource(artifact: Artifact) -> list[Issue]:
     issues.extend(
         Issue(artifact.path, f"{field} must be a non-empty string")
         for field in ("provider", "owner")
-        if field in metadata
-        and not _is_nonempty_string(metadata[field])
+        if field in metadata and not _is_nonempty_string(metadata[field])
     )
     issues.extend(_validate_external_access(artifact))
     issues.extend(_validate_external_url(artifact))

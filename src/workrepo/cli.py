@@ -355,11 +355,7 @@ def _run_new_command(root: Path, args: argparse.Namespace) -> int:
             return 1
         print(f"Created {path.relative_to(root.resolve())}.")
         return 0
-    if (
-        args.parent is not None
-        or args.kind is not None
-        or _has_external_resource_arguments(args)
-    ):
+    if args.parent is not None or args.kind is not None or _has_external_resource_arguments(args):
         print("ERROR artifact-only options cannot be used for an entity")
         return 1
     return _run_new(
