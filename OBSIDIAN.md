@@ -3,14 +3,14 @@
 ## Vaultを開く
 
 Obsidianで「保管庫としてフォルダーを開く」を選び、このリポジトリのルートを指定します。
-`inbox/`だけをVaultにせず、`.git`があるルート全体を開きます。
+`00-inbox/`だけをVaultにせず、`.git`があるルート全体を開きます。
 
 共有設定により、次の動作が有効になります。
 
 - リンクは標準Markdownの相対リンクとして作成する
 - リンク先の名前を変えたとき、参照元も更新する
 - 添付ファイルは現在の文書と同じ階層の`assets/`へ置く
-- `templates/`をObsidian標準のTemplatesプラグインから利用する
+- `90-templates/`をObsidian標準のTemplatesプラグインから利用する
 - 開発用ディレクトリを検索やGraph Viewの対象から除外する
 
 初回だけObsidianの「コアプラグイン」でTemplatesを有効にしてください。プラグインの有効状態は
@@ -38,8 +38,8 @@ uv run workrepo links
 ## Related documents
 
 <!-- workrepo:related:start -->
-- [ERP運用](../../areas/erp-operations/index.md) (`area:erp-operations`)
-- [ERP](../../library/systems/erp.md) (`system:erp`)
+- [ERP運用](../../30-areas/erp-operations/index.md) (`area:erp-operations`)
+- [ERP](../../40-library/20-systems/erp.md) (`system:erp`)
 <!-- workrepo:related:end -->
 ```
 

@@ -10,8 +10,8 @@
 - Keep generated and temporary document data under `.workspace/cache/` or `.workspace/indexes/`.
 - Do not move, delete, archive, or broadly rewrite documents without explicit confirmation.
 - Keep Project and Area as separate concepts; represent their many-to-many relationship with metadata and links.
-- Record events in `log/`; keep current state in the related Project or Area.
-- Treat `inbox/` as temporary capture state, not a permanent document type.
+- Record events in `10-log/`; keep current state in the related Project or Area.
+- Treat `00-inbox/` as temporary capture state, not a permanent document type.
 - Put repository-maintenance code in `src/workrepo/` and small Project-specific code inside that Project.
 - Assume every tracked file may be shared with both private GitHub and the configured AI.
 - Keep material that is not allowed in either system physically outside this repository.

@@ -7,21 +7,21 @@
 
 | 場所 | 判断基準 | 例 |
 | --- | --- | --- |
-| [`inbox/`](inbox/README.md) | まだ置き場所を判断していない | 走り書き、受領直後のメモ |
-| [`log/`](log/README.md) | 何が起きたか | 日記、会議、障害、判断の記録 |
-| [`projects/`](projects/README.md) | 終了条件のある変化は何か | 導入、改善、移行、調査 |
-| [`areas/`](areas/README.md) | 継続的な責任は健全か | ERP運用、アクセス管理 |
-| [`library/`](library/README.md) | 今後も参照する知識は何か | 役割、システム、手順、資料 |
+| [`00-inbox/`](00-inbox/README.md) | まだ置き場所を判断していない | 走り書き、受領直後のメモ |
+| [`10-log/`](10-log/README.md) | 何が起きたか | 日記、会議、障害、判断の記録 |
+| [`20-projects/`](20-projects/README.md) | 終了条件のある変化は何か | 導入、改善、移行、調査 |
+| [`30-areas/`](30-areas/README.md) | 継続的な責任は健全か | ERP運用、アクセス管理 |
+| [`40-library/`](40-library/README.md) | 今後も参照する知識は何か | 役割、システム、手順、資料 |
 
 `inbox`は文書の種類ではなく一時的な状態です。定期的に整理し、残し続けません。
 完了したProjectなどは移動せず、`status`を変更します。これによりリンク切れを防ぎます。
 
 ## 基本ワークフロー
 
-1. 判断に迷う情報は`inbox/`へ短く記録する。
-2. 起きた事実は`log/YYYY/MM/`へ記録する。
+1. 判断に迷う情報は`00-inbox/`へ短く記録する。
+2. 起きた事実は`10-log/YYYY/MM/`へ記録する。
 3. 現在の状態や次の行動は、関連するProjectまたはAreaの`index.md`へ反映する。
-4. 繰り返し使う知識は`library/`へ整理する。
+4. 繰り返し使う知識は`40-library/`へ整理する。
 5. `uv run workrepo check`で構造とリンクを検証する。
 6. `uv run workrepo links`でObsidian向けの文書リンクを同期する。
 7. `uv run workrepo index`でAIやツール向けの索引を生成する。
@@ -37,12 +37,13 @@
 - ProjectとAreaは親子にせず、多対多で関連付けます。
 - Word、Excel、PDF、画像の原本は保持し、必要なら同じ場所にMarkdownの説明を添えます。
 
-詳しい判断基準は[分類ガイド](library/references/classification-guide.md)を参照してください。
+詳しい判断基準は
+[分類ガイド](40-library/40-references/classification-guide.md)を参照してください。
 
 ## Obsidian
 
 このリポジトリのルートをObsidianのVaultとして開けます。共有する設定は、標準Markdown、
-相対リンク、`templates/`、文書ごとの`assets/`だけに限定しています。レイアウト、テーマ、
+相対リンク、`90-templates/`、文書ごとの`assets/`だけに限定しています。レイアウト、テーマ、
 プラグインなどの個人設定はGitで追跡しません。
 
 `related`の安定IDが関係の正です。次のコマンドは、IDから通常のMarkdownリンクを生成し、

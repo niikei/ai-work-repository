@@ -66,7 +66,7 @@ def test_template_repository_is_valid() -> None:
 
 def test_build_index_contains_canonical_title(repository: Path) -> None:
     """The index exposes the H1 and normalized date strings."""
-    write_document(repository, "projects/example/index.md")
+    write_document(repository, "20-projects/example/index.md")
 
     output = build_index(repository)
     payload = json.loads(output.read_text(encoding="utf-8"))
@@ -80,10 +80,10 @@ def test_check_reports_duplicate_and_missing_related_ids(repository: Path) -> No
     """Cross-document identifiers and relationships are checked repository-wide."""
     write_document(
         repository,
-        "projects/first/index.md",
+        "20-projects/first/index.md",
         related="[area:missing]",
     )
-    write_document(repository, "projects/second/index.md")
+    write_document(repository, "20-projects/second/index.md")
 
     messages = [issue.message for issue in check_repository(repository)]
 
@@ -93,7 +93,7 @@ def test_check_reports_duplicate_and_missing_related_ids(repository: Path) -> No
 
 def test_check_rejects_multiple_h1_headings(repository: Path) -> None:
     """A document cannot have competing canonical titles."""
-    path = write_document(repository, "projects/example/index.md")
+    path = write_document(repository, "20-projects/example/index.md")
     path.write_text(f"{path.read_text(encoding='utf-8')}# Another title\n", encoding="utf-8")
 
     issues = check_repository(repository)
@@ -106,14 +106,14 @@ def test_sync_related_links_is_idempotent(repository: Path) -> None:
     """Stable IDs generate portable Markdown links without metadata duplication."""
     source = write_document(
         repository,
-        "projects/source/index.md",
+        "20-projects/source/index.md",
         identifier="project:source",
         related="[project:target]",
         title="Source",
     )
     write_document(
         repository,
-        "projects/target/index.md",
+        "20-projects/target/index.md",
         identifier="project:target",
         title="Target",
     )
@@ -130,13 +130,13 @@ def test_sync_related_links_rejects_malformed_markers(repository: Path) -> None:
     """Generated sections fail safely instead of overwriting ambiguous content."""
     source = write_document(
         repository,
-        "projects/source/index.md",
+        "20-projects/source/index.md",
         identifier="project:source",
         related="[project:target]",
     )
     write_document(
         repository,
-        "projects/target/index.md",
+        "20-projects/target/index.md",
         identifier="project:target",
     )
     source.write_text(

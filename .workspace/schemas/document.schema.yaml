@@ -9,24 +9,24 @@ required:
   - related
 types:
   log:
-    root: log
+    root: 10-log
     statuses: [recorded]
     required: [date]
   project:
-    root: projects
+    root: 20-projects
     statuses: [planned, active, blocked, completed, cancelled]
   area:
-    root: areas
+    root: 30-areas
     statuses: [active, attention, inactive]
   role:
-    root: library/roles
+    root: 40-library/10-roles
     statuses: [draft, active, retired]
   system:
-    root: library/systems
+    root: 40-library/20-systems
     statuses: [draft, active, retired]
   process:
-    root: library/processes
+    root: 40-library/30-processes
     statuses: [draft, active, retired]
   reference:
-    root: library/references
+    root: 40-library/40-references
     statuses: [draft, active, retired]

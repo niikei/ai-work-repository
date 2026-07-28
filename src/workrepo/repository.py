@@ -13,15 +13,7 @@ from workrepo.frontmatter import DocumentParseError, parse_document
 from workrepo.models import Document, Issue
 from workrepo.schema import Schema, TypeRule, load_schema
 
-CONTENT_GLOBS = (
-    "log/**/*.md",
-    "projects/*/index.md",
-    "areas/*/index.md",
-    "library/roles/**/*.md",
-    "library/systems/**/*.md",
-    "library/processes/**/*.md",
-    "library/references/**/*.md",
-)
+INDEX_DOCUMENT_TYPES = frozenset({"project", "area"})
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*:[a-z0-9][a-z0-9:-]*$")
 README_NAME = "README.md"
 INDEX_OUTPUT = Path(".workspace/indexes/documents.json")
@@ -38,7 +30,7 @@ def check_repository(root: Path) -> list[Issue]:
     """Return every validation issue found in a work repository."""
     repository_root = root.resolve()
     schema = load_schema(repository_root)
-    documents, issues = _read_documents(repository_root)
+    documents, issues = _read_documents(repository_root, schema)
     issues.extend(_validate_documents(documents, schema))
     return sorted(issues)
 
@@ -52,7 +44,8 @@ def build_index(root: Path) -> Path:
         message = f"cannot build index while validation issues exist:\n{details}"
         raise ValueError(message)
 
-    documents, parse_issues = _read_documents(repository_root)
+    schema = load_schema(repository_root)
+    documents, parse_issues = _read_documents(repository_root, schema)
     if parse_issues:
         message = "documents changed while building the index"
         raise RuntimeError(message)
@@ -81,7 +74,8 @@ def sync_related_links(root: Path) -> int:
         message = f"cannot synchronize links while validation issues exist:\n{details}"
         raise ValueError(message)
 
-    documents, parse_issues = _read_documents(repository_root)
+    schema = load_schema(repository_root)
+    documents, parse_issues = _read_documents(repository_root, schema)
     if parse_issues:
         message = "documents changed while synchronizing links"
         raise RuntimeError(message)
@@ -103,10 +97,11 @@ def sync_related_links(root: Path) -> int:
     return changed
 
 
-def _read_documents(root: Path) -> tuple[list[Document], list[Issue]]:
+def _read_documents(root: Path, schema: Schema) -> tuple[list[Document], list[Issue]]:
     paths = {
         path
-        for pattern in CONTENT_GLOBS
+        for document_type, rule in schema.types.items()
+        for pattern in (_content_pattern(document_type, rule),)
         for path in root.glob(pattern)
         if path.name != README_NAME
     }
@@ -118,6 +113,11 @@ def _read_documents(root: Path) -> tuple[list[Document], list[Issue]]:
         except (DocumentParseError, OSError, UnicodeError) as error:
             issues.append(Issue(path=path.relative_to(root), message=str(error)))
     return documents, issues
+
+
+def _content_pattern(document_type: str, rule: TypeRule) -> str:
+    suffix = "*/index.md" if document_type in INDEX_DOCUMENT_TYPES else "**/*.md"
+    return f"{rule.root.as_posix()}/{suffix}"
 
 
 def _validate_documents(documents: list[Document], schema: Schema) -> list[Issue]:
