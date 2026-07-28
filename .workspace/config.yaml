@@ -1,0 +1,15 @@
+version: 1
+
+content:
+  roots:
+    - inbox
+    - projects
+    - areas
+    - reference
+    - journal
+    - archive
+
+exclude:
+  - .workspace/cache
+  - node_modules
+  - dist
