@@ -335,6 +335,39 @@ def test_empty_project_subdirectory_is_a_non_blocking_warning(
     ]
 
 
+def test_external_resource_rejects_sensitive_query_parameter(
+    repository: Path,
+) -> None:
+    """Copied share links cannot persist credentials or access tokens."""
+    write_document(repository, "20-projects/example/index.md")
+    resource = repository / "20-projects/example/links/scope.md"
+    resource.parent.mkdir()
+    resource.write_text(
+        """---
+type: artifact
+id: artifact:project:example:scope
+kind: external-resource
+status: active
+created: 2026-07-28
+updated: 2026-07-28
+provider: sharepoint
+url: https://example.com/scope.docx?token=secret
+owner: ERP Team
+access: restricted
+last_verified: 2026-07-28
+related: [project:example]
+---
+
+# Scope
+""",
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == ["url contains sensitive query parameter: token"]
+
+
 def test_check_reports_broken_markdown_link(repository: Path) -> None:
     """Normal relative links are validated with a useful source line."""
     write_document(repository, "20-projects/example/index.md")

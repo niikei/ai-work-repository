@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from workrepo.calendar import work_week
 from workrepo.discovery import discover_artifacts, discover_documents
@@ -21,6 +22,7 @@ ARTIFACT_DIRECTORIES = {
     "note": "notes",
     "review": "reviews",
     "control": "controls",
+    "external-resource": "links",
 }
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MAX_SLUG_LENGTH = 64
@@ -52,6 +54,17 @@ class CreateRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class ExternalResourceMetadata:
+    """Metadata required to keep a remote resource usable over time."""
+
+    provider: str
+    url: str
+    owner: str
+    access: str = "internal"
+    last_verified: date | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ArtifactRequest:
     """User-supplied values for one typed Project or Area artifact."""
 
@@ -61,6 +74,7 @@ class ArtifactRequest:
     kind: str
     related: tuple[str, ...] = ()
     document_date: date | None = None
+    external_resource: ExternalResourceMetadata | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +84,7 @@ class _ArtifactTemplateValues:
     title: str
     related: tuple[str, ...]
     document_date: date
+    external_resource: ExternalResourceMetadata | None
 
 
 def create_document(
@@ -142,6 +157,7 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
         allowed = ", ".join(sorted(schema.artifact.kinds))
         message = f"invalid artifact kind {request.kind!r}; expected one of: {allowed}"
         raise ValueError(message)
+    _validate_external_resource_request(request)
     related = tuple(dict.fromkeys((request.parent_id, *request.related)))
     _validate_related_ids(repository_root, schema, related)
 
@@ -155,7 +171,10 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
     directory = ARTIFACT_DIRECTORIES[request.kind]
     destination = repository_root / parent.path.parent / directory / f"{request.slug}.md"
     _ensure_path_available(destination, repository_root)
-    template = (repository_root / schema.templates_root / "artifact.md").read_text(
+    template_name = (
+        "external-resource.md" if request.kind == "external-resource" else "artifact.md"
+    )
+    template = (repository_root / schema.templates_root / template_name).read_text(
         encoding="utf-8",
     )
     rendered = _render_artifact_template(
@@ -166,6 +185,7 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
             title=normalized_title,
             related=related,
             document_date=effective_date,
+            external_resource=request.external_resource,
         ),
     )
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -334,7 +354,43 @@ def _render_artifact_template(
     rendered = H1_PATTERN.sub(f"# {values.title}", rendered, count=1)
     related_yaml = "related:\n" + "\n".join(f"  - {related_id}" for related_id in values.related)
     rendered = RELATED_PATTERN.sub(related_yaml, rendered, count=1)
+    if values.external_resource is not None:
+        resource = values.external_resource
+        verified = resource.last_verified or values.document_date
+        rendered = rendered.replace("PROVIDER_VALUE", _yaml_string(resource.provider), 1)
+        rendered = rendered.replace("URL_VALUE", _yaml_string(resource.url), 1)
+        rendered = rendered.replace("OWNER_VALUE", _yaml_string(resource.owner), 1)
+        rendered = rendered.replace("ACCESS_VALUE", _yaml_string(resource.access), 1)
+        rendered = rendered.replace("LAST_VERIFIED", verified.isoformat(), 1)
     return f"{rendered.rstrip()}\n"
+
+
+def _validate_external_resource_request(request: ArtifactRequest) -> None:
+    if request.kind == "external-resource" and request.external_resource is None:
+        message = "external-resource requires provider, URL, owner, and access metadata"
+        raise ValueError(message)
+    if request.kind != "external-resource" and request.external_resource is not None:
+        message = "external resource metadata is only valid for external-resource"
+        raise ValueError(message)
+    resource = request.external_resource
+    if resource is None:
+        return
+    for field, value in (("provider", resource.provider), ("owner", resource.owner)):
+        if not value.strip():
+            message = f"external-resource {field} must not be empty"
+            raise ValueError(message)
+    parsed = urlsplit(resource.url)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
+        message = "external-resource URL must use HTTP or HTTPS"
+        raise ValueError(message)
+    if resource.access not in {"internal", "restricted", "public"}:
+        message = "external-resource access must be internal, restricted, or public"
+        raise ValueError(message)
+
+
+def _yaml_string(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
 
 
 def _today() -> date:

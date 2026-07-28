@@ -59,5 +59,13 @@ artifact:
     - note
     - review
     - control
+    - external-resource
   required: [type, id, kind, status, created, updated, related]
-  optional: [period_start, period_end]
+  optional:
+    - period_start
+    - period_end
+    - provider
+    - url
+    - owner
+    - access
+    - last_verified

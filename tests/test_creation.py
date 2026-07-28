@@ -9,6 +9,7 @@ import pytest
 from workrepo.creation import (
     ArtifactRequest,
     CreateRequest,
+    ExternalResourceMetadata,
     capture_inbox,
     create_artifact,
     create_document,
@@ -192,6 +193,76 @@ def test_create_typed_artifact_under_its_parent(repository: Path) -> None:
     assert "id: artifact:project:erp-upgrade:2026-07-27-weekly-report" in content
     assert "  - project:erp-upgrade" in content
     assert check_repository(repository) == []
+
+
+def test_create_external_resource_with_durable_access_metadata(
+    repository: Path,
+) -> None:
+    """Cloud originals remain discoverable without copying credentials."""
+    create_document(
+        repository,
+        CreateRequest(
+            document_type="project",
+            slug="erp-upgrade",
+            title="ERP更改",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+
+    path = create_artifact(
+        repository,
+        ArtifactRequest(
+            slug="scope-original",
+            title="ERP更改スコープ原本",
+            parent_id="project:erp-upgrade",
+            kind="external-resource",
+            document_date=DOCUMENT_DATE,
+            external_resource=ExternalResourceMetadata(
+                provider="sharepoint",
+                url="https://example.com/sites/erp/scope.docx",
+                owner="ERP Team",
+                access="restricted",
+            ),
+        ),
+    )
+
+    assert path.relative_to(repository) == Path(
+        "20-projects/erp-upgrade/links/scope-original.md",
+    )
+    content = path.read_text(encoding="utf-8")
+    assert 'url: "https://example.com/sites/erp/scope.docx"' in content
+    assert 'owner: "ERP Team"' in content
+    assert "last_verified: 2026-07-29" in content
+    assert check_repository(repository) == []
+
+
+def test_external_resource_rejects_non_web_url(repository: Path) -> None:
+    """A workstation-only path cannot masquerade as a durable shared link."""
+    create_document(
+        repository,
+        CreateRequest(
+            document_type="project",
+            slug="erp-upgrade",
+            title="ERP更改",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+
+    request = ArtifactRequest(
+        slug="scope-original",
+        title="ERP更改スコープ原本",
+        parent_id="project:erp-upgrade",
+        kind="external-resource",
+        document_date=DOCUMENT_DATE,
+        external_resource=ExternalResourceMetadata(
+            provider="filesystem",
+            url="C:/Documents/scope.docx",
+            owner="ERP Team",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="URL must use HTTP or HTTPS"):
+        create_artifact(repository, request)
 
 
 @pytest.mark.parametrize("slug", ["con", "COM1"])

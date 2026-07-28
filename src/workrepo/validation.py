@@ -6,7 +6,7 @@ from collections import Counter
 from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 import yaml
 
@@ -32,6 +32,13 @@ IGNORED_MARKDOWN_DIRECTORIES = frozenset(
     },
 )
 GENERATED_MARKDOWN_FILES = frozenset({"DASHBOARD.md", "NAVIGATION.md"})
+EXTERNAL_RESOURCE_FIELDS = frozenset(
+    {"provider", "url", "owner", "access", "last_verified"},
+)
+EXTERNAL_ACCESS_VALUES = frozenset({"internal", "restricted", "public"})
+SENSITIVE_QUERY_KEYS = frozenset(
+    {"access_token", "api_key", "apikey", "key", "password", "secret", "signature", "token"},
+)
 
 
 def check_repository(root: Path) -> list[Issue]:
@@ -287,6 +294,7 @@ def _validate_artifact(artifact: Artifact, schema: Schema) -> list[Issue]:
     )
     issues.extend(_validate_dates(artifact))
     issues.extend(_validate_artifact_period(artifact))
+    issues.extend(_validate_external_resource(artifact))
     issues.extend(_validate_related(artifact))
     if artifact.parent_id is None:
         issues.append(Issue(artifact.path, "artifact has no owning Project or Area"))
@@ -387,6 +395,8 @@ def _validate_dates(document: ContentDocument) -> list[Issue]:
     fields = ["created", "updated"]
     if document.metadata.get("type") == "area":
         fields.append("last_reviewed")
+    if document.metadata.get("kind") == "external-resource":
+        fields.append("last_verified")
     parsed: dict[str, date] = {}
     issues: list[Issue] = []
     for field in fields:
@@ -441,6 +451,73 @@ def _validate_artifact_period(artifact: Artifact) -> list[Issue]:
     ]
     if start is not None and end is not None and end < start:
         issues.append(Issue(artifact.path, "period_end must not be earlier than period_start"))
+    return issues
+
+
+def _validate_external_resource(artifact: Artifact) -> list[Issue]:
+    metadata = artifact.metadata
+    if metadata.get("kind") != "external-resource":
+        unexpected = EXTERNAL_RESOURCE_FIELDS & metadata.keys()
+        return [
+            Issue(
+                artifact.path,
+                f"{field} is only valid for external-resource",
+            )
+            for field in sorted(unexpected)
+        ]
+    issues = [
+        Issue(artifact.path, f"external-resource is missing required field: {field}")
+        for field in sorted(EXTERNAL_RESOURCE_FIELDS - metadata.keys())
+    ]
+    issues.extend(
+        Issue(artifact.path, f"{field} must be a non-empty string")
+        for field in ("provider", "owner")
+        if field in metadata
+        and not _is_nonempty_string(metadata[field])
+    )
+    issues.extend(_validate_external_access(artifact))
+    issues.extend(_validate_external_url(artifact))
+    return issues
+
+
+def _is_nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _validate_external_access(artifact: Artifact) -> list[Issue]:
+    access = artifact.metadata.get("access")
+    if access is None or access in EXTERNAL_ACCESS_VALUES:
+        return []
+    allowed = ", ".join(sorted(EXTERNAL_ACCESS_VALUES))
+    return [
+        Issue(
+            artifact.path,
+            f"invalid access {access!r}; expected one of: {allowed}",
+        ),
+    ]
+
+
+def _validate_external_url(artifact: Artifact) -> list[Issue]:
+    value = artifact.metadata.get("url")
+    if value is None:
+        return []
+    if not isinstance(value, str):
+        return [Issue(artifact.path, "url must be an HTTP or HTTPS URL")]
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
+        return [Issue(artifact.path, "url must be an HTTP or HTTPS URL")]
+    issues: list[Issue] = []
+    if parsed.username is not None or parsed.password is not None:
+        issues.append(Issue(artifact.path, "url must not contain embedded credentials"))
+    query_keys = {key.casefold() for key, _ in parse_qsl(parsed.query)}
+    sensitive = sorted(query_keys & SENSITIVE_QUERY_KEYS)
+    if sensitive:
+        issues.append(
+            Issue(
+                artifact.path,
+                f"url contains sensitive query parameter: {', '.join(sensitive)}",
+            ),
+        )
     return issues
 
 

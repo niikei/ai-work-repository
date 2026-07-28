@@ -55,6 +55,16 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
   --parent project:erp-upgrade \
   --kind weekly-report
 
+# SharePointなど外部にある原本への管理された案内を作成
+uv run workrepo new artifact erp-scope \
+  --title "ERP更改スコープ原本" \
+  --parent project:erp-upgrade \
+  --kind external-resource \
+  --provider sharepoint \
+  --url "https://example.com/sites/erp/scope.docx" \
+  --owner "ERP Team" \
+  --access restricted
+
 # 検証と生成物の更新
 uv run workrepo check
 uv run workrepo refresh
@@ -85,7 +95,9 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - 関係はファイルパスではなく`related`に安定IDを列挙します。
 - ProjectとAreaは親子にせず、多対多で関連付けます。
 - 物理ディレクトリは安定した所有場所を表し、表示上のgroupやArea別一覧は生成します。
-- Word、Excel、PDF、画像の原本は保持し、必要なら同じ場所にMarkdownの説明を添えます。
+- Word、Excel、PowerPoint、SharePointなど外部の原本は`external-resource`としてURL、owner、
+  access、最終確認日を管理します。認証が必要なURLを通常検査でオンライン照会はしません。
+  パスワード、token、署名付きURLは記録しません。
 
 詳しい判断基準は
 [分類ガイド](40-library/40-references/classification-guide.md)と

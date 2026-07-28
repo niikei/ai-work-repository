@@ -13,6 +13,7 @@ from workrepo.creation import (
     DOCUMENT_TYPES,
     ArtifactRequest,
     CreateRequest,
+    ExternalResourceMetadata,
     capture_inbox,
     create_artifact,
     create_document,
@@ -166,6 +167,7 @@ def _build_parser() -> argparse.ArgumentParser:
         type=_iso_date,
         help="document date in YYYY-MM-DD format (default: today)",
     )
+    _add_external_resource_arguments(new_parser)
     capture_parser = subparsers.add_parser(
         "capture",
         help="append a short item to the dated Inbox file",
@@ -216,6 +218,22 @@ def _build_parser() -> argparse.ArgumentParser:
     hooks_subparsers.add_parser("status", help="show whether managed hooks are active")
     subparsers.add_parser("doctor", help="diagnose local repository setup")
     return parser
+
+
+def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--url", help="external resource URL")
+    parser.add_argument("--provider", help="resource provider, such as sharepoint")
+    parser.add_argument("--owner", help="person or team responsible for access")
+    parser.add_argument(
+        "--access",
+        choices=("internal", "restricted", "public"),
+        help="resource access classification (default for external resource: internal)",
+    )
+    parser.add_argument(
+        "--last-verified",
+        type=_iso_date,
+        help="date the link and access were last verified (default: document date)",
+    )
 
 
 def _add_browse_commands(
@@ -319,6 +337,7 @@ def _run_new_command(root: Path, args: argparse.Namespace) -> int:
             print("ERROR --template is only valid for log")
             return 1
         try:
+            external_resource = _external_resource_metadata(args)
             path = create_artifact(
                 root,
                 ArtifactRequest(
@@ -328,6 +347,7 @@ def _run_new_command(root: Path, args: argparse.Namespace) -> int:
                     kind=args.kind,
                     related=tuple(args.related),
                     document_date=args.date,
+                    external_resource=external_resource,
                 ),
             )
         except COMMAND_ERRORS as error:
@@ -335,8 +355,12 @@ def _run_new_command(root: Path, args: argparse.Namespace) -> int:
             return 1
         print(f"Created {path.relative_to(root.resolve())}.")
         return 0
-    if args.parent is not None or args.kind is not None:
-        print("ERROR --parent and --kind are only valid for artifact")
+    if (
+        args.parent is not None
+        or args.kind is not None
+        or _has_external_resource_arguments(args)
+    ):
+        print("ERROR artifact-only options cannot be used for an entity")
         return 1
     return _run_new(
         root,
@@ -348,6 +372,48 @@ def _run_new_command(root: Path, args: argparse.Namespace) -> int:
             document_date=args.date,
             template_name=args.template,
         ),
+    )
+
+
+def _external_resource_metadata(
+    args: argparse.Namespace,
+) -> ExternalResourceMetadata | None:
+    if args.kind != "external-resource":
+        if _has_external_resource_arguments(args):
+            message = "external resource options require --kind external-resource"
+            raise ValueError(message)
+        return None
+    missing = [
+        option
+        for option, value in (
+            ("--url", args.url),
+            ("--provider", args.provider),
+            ("--owner", args.owner),
+        )
+        if value is None
+    ]
+    if missing:
+        message = f"external-resource requires {', '.join(missing)}"
+        raise ValueError(message)
+    return ExternalResourceMetadata(
+        provider=args.provider,
+        url=args.url,
+        owner=args.owner,
+        access=args.access or "internal",
+        last_verified=args.last_verified,
+    )
+
+
+def _has_external_resource_arguments(args: argparse.Namespace) -> bool:
+    return any(
+        value is not None
+        for value in (
+            args.url,
+            args.provider,
+            args.owner,
+            args.access,
+            args.last_verified,
+        )
     )
 
 
