@@ -10,6 +10,9 @@ applyTo: "{10-log,20-projects,30-areas,40-library}/**/*.md"
 - Never change `created` after the document is committed.
 - Set `updated` to the actual edit date; never use a future date.
 - Use existing stable IDs in `related`; do not guess relationships from similar names.
+- Replace superseded Project or Area state instead of appending contradictory bullets. Preserve the
+  prior state in a Log or review artifact when its history matters.
 - Keep historical events in Logs and current state in Project or Area documents.
+- Use typed `external-resource` artifacts for external originals; never copy credentials or tokens.
 - Do not edit generated related-link blocks manually.
 - Validate with `uv run workrepo refresh` and `uv run workrepo check`.

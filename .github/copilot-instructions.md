@@ -6,12 +6,18 @@ files are user-owned records; accuracy and traceability are more important than 
 - Read `README.md` and the nearest Project or Area `index.md` before changing managed content.
 - Use the H1 as the canonical title. Do not add `title` to YAML frontmatter.
 - Treat stable IDs and frontmatter `related` values as canonical relationships.
-- Keep events in `10-log/`; keep current state in the related Project or Area.
+- Keep events and superseded states in `10-log/` or typed review artifacts; keep only current state
+  in the related Project or Area.
 - Treat `00-inbox/` as temporary capture. Use `uv run workrepo capture`, not ad hoc Inbox files.
 - Prefer `uv run workrepo new` when creating managed content.
 - Preserve `created`; update `updated` when changing canonical content.
 - Preserve uncertainty. Do not invent decisions, owners, deadlines, completion, or relationships.
-- Do not edit `DASHBOARD.md` or `workrepo:related` blocks directly; run `uv run workrepo refresh`.
+- Use `uv run workrepo list` and `uv run workrepo search` before scanning large directory trees.
+- Do not maintain a manual Project list in an Area; `related` and generated navigation are canonical.
+- Use `external-resource` for durable Word, Excel, PowerPoint, and SharePoint links. Never record
+  credentials, access tokens, or signed URLs.
+- Do not edit `DASHBOARD.md`, `NAVIGATION.md`, or `workrepo:related` blocks directly; run
+  `uv run workrepo refresh`.
 - Do not move, delete, archive, or broadly rewrite records without explicit authorization.
 - Do not edit Word, Excel, PDF, or image originals unless explicitly requested.
 - Keep data that cannot be shared with the configured Git or AI physically outside this repository.

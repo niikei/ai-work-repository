@@ -9,6 +9,7 @@ description: Safely review and process dated work-repository Inbox checklists. U
 2. Read each relevant dated Inbox file and the nearest candidate Project or Area `index.md`.
 3. Classify each open item:
    - Something that happened, a meeting, decision, or incident → Log.
+   - Several small calls, messages, or actions from one day → one daily Log.
    - A bounded change with an outcome → Project state or Project artifact.
    - Ongoing responsibility health or next action → Area state.
    - Reusable role, system, process, or reference knowledge → Library.
@@ -20,6 +21,9 @@ description: Safely review and process dated work-repository Inbox checklists. U
 7. Remove a completed dated Inbox file only when no useful context would be lost and the user has
    authorized cleanup.
 8. Run `uv run workrepo refresh` and `uv run workrepo check`.
+
+When updating current state, replace obsolete wording rather than leaving mutually contradictory
+bullets. Preserve useful history in the source Log or a typed review artifact.
 
 Use `uv run workrepo new` for managed documents. Never create `00-inbox/a.md` or another ad hoc
 Inbox file; new capture goes through `uv run workrepo capture`.

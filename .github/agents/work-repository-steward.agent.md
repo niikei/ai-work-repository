@@ -18,3 +18,8 @@ Use `workrepo` commands rather than reproducing path, ID, validation, or generat
 destructive cleanup or broad rewriting. After approved changes, run `uv run workrepo refresh` and
 `uv run workrepo check`, then summarize modified files, unresolved uncertainty, and validation
 results. Never commit or push unless explicitly requested.
+
+For large repositories, start with `workrepo list` or `workrepo search`. Treat Project and Area
+documents as current-state views: replace superseded wording and keep useful history in Logs or
+review artifacts. Use managed external resources for cloud-hosted originals and never persist
+credentials or signed URLs.
