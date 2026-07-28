@@ -1,9 +1,10 @@
 """Human-readable overview generation for current repository state."""
 
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
+from workrepo.clock import current_date
 from workrepo.inbox import InboxReport
 from workrepo.models import Document
 from workrepo.review import next_review
@@ -37,7 +38,10 @@ def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> P
             "",
             *_project_section(projects),
             "",
-            *_area_section(areas),
+            *_area_section(
+                areas,
+                today=current_date(repository_state.policy.timezone),
+            ),
             "",
         ),
     )
@@ -90,8 +94,11 @@ def _project_section(documents: list[Document]) -> tuple[str, ...]:
     )
 
 
-def _area_section(documents: list[Document]) -> tuple[str, ...]:
-    today = datetime.now(tz=UTC).astimezone().date()
+def _area_section(
+    documents: list[Document],
+    *,
+    today: date,
+) -> tuple[str, ...]:
     visible = [
         document
         for document in documents

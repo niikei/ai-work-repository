@@ -4,13 +4,14 @@ import re
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from urllib.parse import SplitResult, parse_qsl, unquote, urlsplit
 
 import yaml
 
 from workrepo.calendar import work_week
+from workrepo.clock import current_date
 from workrepo.creation import WINDOWS_RESERVED_NAMES
 from workrepo.generated import remove_related_block
 from workrepo.inbox import InboxReport, inspect_inbox
@@ -66,6 +67,7 @@ def inspect_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
             list(state.documents),
             list(state.artifacts),
             state.schema,
+            today=current_date(state.policy.timezone),
         ),
     )
     issues.extend(_validate_markdown_links(state.root))
@@ -80,7 +82,7 @@ def inbox_report(
     today: date | None = None,
 ) -> InboxReport:
     """Return Inbox health using the same state and policy as validation."""
-    effective_today = today or datetime.now(tz=UTC).astimezone().date()
+    effective_today = today or current_date(state.policy.timezone)
     return inspect_inbox(
         state.root,
         state.schema.inbox_root,
@@ -218,12 +220,20 @@ def _validate_content(
     documents: list[Document],
     artifacts: list[Artifact],
     schema: Schema,
+    *,
+    today: date,
 ) -> list[Issue]:
     typed_artifacts = [artifact for artifact in artifacts if artifact.typed]
     content: list[ContentDocument] = [*documents, *typed_artifacts]
-    issues = [issue for document in documents for issue in _validate_document(document, schema)]
+    issues = [
+        issue
+        for document in documents
+        for issue in _validate_document(document, schema, today=today)
+    ]
     issues.extend(
-        issue for artifact in typed_artifacts for issue in _validate_artifact(artifact, schema)
+        issue
+        for artifact in typed_artifacts
+        for issue in _validate_artifact(artifact, schema, today=today)
     )
     identifiers = [
         document_id for document in content if (document_id := identifier(document)) is not None
@@ -245,7 +255,12 @@ def _validate_content(
     return issues
 
 
-def _validate_document(document: Document, schema: Schema) -> list[Issue]:
+def _validate_document(
+    document: Document,
+    schema: Schema,
+    *,
+    today: date,
+) -> list[Issue]:
     metadata = document.metadata
     document_type = metadata.get("type")
     if not isinstance(document_type, str) or document_type not in schema.types:
@@ -267,13 +282,18 @@ def _validate_document(document: Document, schema: Schema) -> list[Issue]:
             schema.required | rule.required | rule.optional | rule.values.keys(),
         ),
     )
-    issues.extend(_validate_dates(document))
+    issues.extend(_validate_dates(document, today=today))
     issues.extend(_validate_log_path(document, rule))
     issues.extend(_validate_related(document))
     return issues
 
 
-def _validate_artifact(artifact: Artifact, schema: Schema) -> list[Issue]:
+def _validate_artifact(
+    artifact: Artifact,
+    schema: Schema,
+    *,
+    today: date,
+) -> list[Issue]:
     metadata = artifact.metadata
     if metadata.get("type") != "artifact":
         return [
@@ -303,7 +323,7 @@ def _validate_artifact(artifact: Artifact, schema: Schema) -> list[Issue]:
             schema.artifact.required | schema.artifact.optional,
         ),
     )
-    issues.extend(_validate_dates(artifact))
+    issues.extend(_validate_dates(artifact, today=today))
     issues.extend(_validate_artifact_period(artifact))
     issues.extend(_validate_external_resource(artifact))
     issues.extend(_validate_related(artifact))
@@ -402,7 +422,7 @@ def _enum_issue(
     )
 
 
-def _validate_dates(document: ContentDocument) -> list[Issue]:
+def _validate_dates(document: ContentDocument, *, today: date) -> list[Issue]:
     fields = ["created", "updated"]
     if document.metadata.get("type") == "area":
         fields.append("last_reviewed")
@@ -419,7 +439,6 @@ def _validate_dates(document: ContentDocument) -> list[Issue]:
             issues.append(Issue(document.path, f"{field} must be an ISO date"))
         else:
             parsed[field] = parsed_value
-    today = datetime.now(tz=UTC).astimezone().date()
     issues.extend(
         Issue(document.path, f"{field} must not be in the future")
         for field, value in parsed.items()

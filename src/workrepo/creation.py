@@ -2,13 +2,15 @@
 
 import re
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from workrepo.calendar import work_week
+from workrepo.clock import current_date
 from workrepo.discovery import discover_artifacts, discover_documents
 from workrepo.models import ContentDocument
+from workrepo.policy import load_policy
 from workrepo.schema import Schema, TypeRule, load_schema
 
 DOCUMENT_TYPES = ("log", "project", "area", "role", "system", "process", "reference")
@@ -101,7 +103,7 @@ def create_document(
     normalized_title = _normalize_title(request.title)
     _validate_related_ids(repository_root, schema, request.related)
 
-    effective_date = request.document_date or _today()
+    effective_date = request.document_date or _repository_today(repository_root)
     destination = _document_path(
         repository_root,
         schema.types[request.document_type],
@@ -161,7 +163,7 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
     related = tuple(dict.fromkeys((request.parent_id, *request.related)))
     _validate_related_ids(repository_root, schema, related)
 
-    effective_date = request.document_date or _today()
+    effective_date = request.document_date or _repository_today(repository_root)
     parent_slug = request.parent_id.split(":", maxsplit=1)[1]
     parent_type = str(parent.metadata["type"])
     artifact_id = f"artifact:{parent_type}:{parent_slug}:{request.slug}"
@@ -205,7 +207,7 @@ def capture_inbox(
         message = "capture text must not be empty"
         raise ValueError(message)
 
-    effective_date = capture_date or _today()
+    effective_date = capture_date or _repository_today(repository_root)
     path = repository_root / schema.inbox_root / f"{effective_date.isoformat()}.md"
     _ensure_inside_repository(path, repository_root)
     item = f"- [ ] {normalized_text}\n"
@@ -391,5 +393,5 @@ def _yaml_string(value: str) -> str:
     return f'"{escaped}"'
 
 
-def _today() -> date:
-    return datetime.now(tz=UTC).astimezone().date()
+def _repository_today(root: Path) -> date:
+    return current_date(load_policy(root).timezone)

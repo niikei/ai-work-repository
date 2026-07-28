@@ -1,11 +1,12 @@
 """Deterministic machine-readable index generation."""
 
 import json
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from workrepo.calendar import work_week
+from workrepo.clock import current_date
 from workrepo.markdown import inspect_markdown
 from workrepo.models import Artifact, ContentDocument, Document
 from workrepo.review import next_review
@@ -22,8 +23,9 @@ def build_index(root: Path, *, state: RepositoryState | None = None) -> Path:
     documents = repository_state.documents
     artifacts = repository_state.artifacts
     backlinks = _backlinks([*documents, *artifacts])
+    today = current_date(repository_state.policy.timezone)
     entries = [
-        *(_entity_entry(repository_root, document, backlinks) for document in documents),
+        *(_entity_entry(repository_root, document, backlinks, today) for document in documents),
         *(_artifact_entry(repository_root, artifact, backlinks) for artifact in artifacts),
     ]
     payload = {
@@ -43,6 +45,7 @@ def _entity_entry(
     root: Path,
     document: Document,
     backlinks: dict[str, list[str]],
+    today: date,
 ) -> dict[str, object]:
     metadata = {key: _json_value(value) for key, value in sorted(document.metadata.items())}
     return {
@@ -53,7 +56,7 @@ def _entity_entry(
         "path": document.path.as_posix(),
         "metadata": metadata,
         "derived": {
-            **_derived_values(document),
+            **_derived_values(document, today),
             "backlinks": backlinks.get(str(metadata["id"]), []),
             "external_links": _external_links(root, document),
         },
@@ -92,7 +95,7 @@ def _json_value(value: object) -> object:
     return value
 
 
-def _derived_values(document: Document) -> dict[str, object]:
+def _derived_values(document: Document, today: date) -> dict[str, object]:
     document_type = document.metadata.get("type")
     if document_type == "log":
         log_date = _date_value(document.metadata.get("date"))
@@ -111,7 +114,7 @@ def _derived_values(document: Document) -> dict[str, object]:
         review_date = next_review(last_reviewed, cycle)
         return {
             "next_review": review_date.isoformat(),
-            "review_overdue": review_date < datetime.now(tz=UTC).astimezone().date(),
+            "review_overdue": review_date < today,
         }
     return {}
 

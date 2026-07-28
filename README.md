@@ -193,6 +193,7 @@ uv run workrepo check --strict
 7日以上のInbox項目と、完了済みなのに残っているInboxファイルは警告します。期限と件数は
 [`.workspace/policy.yaml`](.workspace/policy.yaml)で調整できます。緊急時にhookを迂回した
 commitは可能ですが、通常運用では`--no-verify`を使わず、先に原因を整理してください。
+文書日付は同じpolicyの`timezone`を基準にするため、PCとUTCのCIで日付境界がずれません。
 
 ## コードとデータの境界
 

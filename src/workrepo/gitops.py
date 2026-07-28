@@ -7,13 +7,15 @@ import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import yaml
 
+from workrepo.clock import current_date
 from workrepo.generated import remove_related_block
 from workrepo.models import Issue
+from workrepo.policy import load_policy
 from workrepo.validation import (
     inspect_repository,
     repository_warnings,
@@ -82,7 +84,7 @@ def is_git_repository(root: Path) -> bool:
 
 def _updated_date_issues(root: Path) -> list[Issue]:
     issues: list[Issue] = []
-    today = datetime.now(tz=UTC).astimezone().date()
+    today = current_date(load_policy(root).timezone)
     for path in _staged_paths(root):
         if path.suffix != ".md":
             continue

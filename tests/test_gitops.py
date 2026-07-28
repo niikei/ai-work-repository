@@ -2,15 +2,17 @@
 
 import shutil
 import subprocess
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 
+from workrepo.clock import current_date
 from workrepo.creation import CreateRequest, create_document
 from workrepo.gitops import check_staged, hooks_active, install_hooks
 
 PROJECT_ROOT = Path(__file__).parents[1]
+TIMEZONE = "Asia/Tokyo"
 
 
 def _git(root: Path, *arguments: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -50,7 +52,7 @@ def test_check_staged_uses_index_not_worktree(git_repository: Path) -> None:
 
 
 def test_check_staged_requires_updated_change(git_repository: Path) -> None:
-    yesterday = datetime.now(tz=UTC).astimezone().date() - timedelta(days=1)
+    yesterday = current_date(TIMEZONE) - timedelta(days=1)
     document = create_document(
         git_repository,
         CreateRequest(
@@ -102,7 +104,7 @@ def test_check_staged_rejects_created_date_change(git_repository: Path) -> None:
     )
     _git(git_repository, "add", ".")
     _git(git_repository, "commit", "--quiet", "-m", "Add project")
-    today = datetime.now(tz=UTC).astimezone().date()
+    today = current_date(TIMEZONE)
     yesterday = today - timedelta(days=1)
     source = document.read_text(encoding="utf-8")
     document.write_text(

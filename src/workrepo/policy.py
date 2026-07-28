@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
 
@@ -34,6 +35,7 @@ class Policy:
 
     inbox: InboxPolicy
     files: FilePolicy
+    timezone: str
 
 
 def load_policy(root: Path) -> Policy:
@@ -50,6 +52,7 @@ def load_policy(root: Path) -> Policy:
         raise ValueError(message)
     inbox = _mapping(mapping.get("inbox"), "policy.inbox")
     files = _mapping(mapping.get("files"), "policy.files")
+    timezone = _timezone(mapping.get("timezone"))
     inbox_policy = InboxPolicy(
         warn_after_days=_positive_int(inbox.get("warn_after_days"), "warn_after_days"),
         block_after_days=_positive_int(
@@ -73,6 +76,7 @@ def load_policy(root: Path) -> Policy:
                 "max_path_length",
             ),
         ),
+        timezone=timezone,
     )
 
 
@@ -87,4 +91,16 @@ def _positive_int(raw: object, label: str) -> int:
     if not isinstance(raw, int) or isinstance(raw, bool) or raw <= 0:
         message = f"{label} must be a positive integer"
         raise ValueError(message)
+    return raw
+
+
+def _timezone(raw: object) -> str:
+    if not isinstance(raw, str) or not raw:
+        message = "policy.timezone must be a non-empty IANA timezone"
+        raise ValueError(message)
+    try:
+        ZoneInfo(raw)
+    except ZoneInfoNotFoundError as error:
+        message = f"unknown policy.timezone: {raw}"
+        raise ValueError(message) from error
     return raw
