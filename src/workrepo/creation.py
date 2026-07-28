@@ -6,11 +6,32 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from workrepo.calendar import work_week
-from workrepo.frontmatter import DocumentParseError, parse_document
+from workrepo.discovery import discover_artifacts, discover_documents
+from workrepo.models import ContentDocument
 from workrepo.schema import Schema, TypeRule, load_schema
 
 DOCUMENT_TYPES = ("log", "project", "area", "role", "system", "process", "reference")
+ARTIFACT_DIRECTORIES = {
+    "weekly-report": "reports",
+    "report": "reports",
+    "analysis": "analysis",
+    "specification": "specifications",
+    "deliverable": "deliverables",
+    "attachment-note": "assets",
+    "note": "notes",
+}
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MAX_SLUG_LENGTH = 64
+WINDOWS_RESERVED_NAMES = frozenset(
+    {
+        "aux",
+        "con",
+        "nul",
+        "prn",
+        *(f"com{number}" for number in range(1, 10)),
+        *(f"lpt{number}" for number in range(1, 10)),
+    },
+)
 H1_PATTERN = re.compile(r"^# .+$", flags=re.MULTILINE)
 ID_PATTERN = re.compile(r"^id: .+$", flags=re.MULTILINE)
 RELATED_PATTERN = re.compile(r"^related: \[\]$", flags=re.MULTILINE)
@@ -25,6 +46,28 @@ class CreateRequest:
     title: str
     related: tuple[str, ...] = ()
     document_date: date | None = None
+    template_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactRequest:
+    """User-supplied values for one typed Project or Area artifact."""
+
+    slug: str
+    title: str
+    parent_id: str
+    kind: str
+    related: tuple[str, ...] = ()
+    document_date: date | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _ArtifactTemplateValues:
+    artifact_id: str
+    kind: str
+    title: str
+    related: tuple[str, ...]
+    document_date: date
 
 
 def create_document(
@@ -49,17 +92,75 @@ def create_document(
         request.slug,
         effective_date,
     )
-    if destination.exists():
-        message = f"document already exists: {destination.relative_to(repository_root)}"
-        raise FileExistsError(message)
+    _ensure_path_available(destination, repository_root)
 
     template_path = repository_root / schema.templates_root / f"{request.document_type}.md"
+    if request.template_name is not None:
+        if request.document_type != "log" or request.template_name not in {"log", "meeting"}:
+            message = "template selection is only supported for log and meeting"
+            raise ValueError(message)
+        template_path = repository_root / schema.templates_root / f"{request.template_name}.md"
     template = template_path.read_text(encoding="utf-8")
     rendered = _render_template(
         template,
         request=request,
         title=normalized_title,
         document_date=effective_date,
+    )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(rendered, encoding="utf-8")
+    return destination
+
+
+def create_artifact(root: Path, request: ArtifactRequest) -> Path:
+    """Create one typed artifact below its owning Project or Area."""
+    repository_root = root.resolve()
+    schema = load_schema(repository_root)
+    _validate_slug(request.slug)
+    normalized_title = _normalize_title(request.title)
+    documents, parse_issues = discover_documents(repository_root, schema)
+    if parse_issues:
+        message = "cannot create an artifact while entity parse issues exist"
+        raise ValueError(message)
+    parents = {
+        document_id: document
+        for document in documents
+        if document.metadata.get("type") in {"project", "area"}
+        and (document_id := _document_id(document)) is not None
+    }
+    parent = parents.get(request.parent_id)
+    if parent is None:
+        message = f"Project or Area does not exist: {request.parent_id}"
+        raise ValueError(message)
+    if request.kind not in schema.artifact.kinds:
+        allowed = ", ".join(sorted(schema.artifact.kinds))
+        message = f"invalid artifact kind {request.kind!r}; expected one of: {allowed}"
+        raise ValueError(message)
+    related = tuple(dict.fromkeys((request.parent_id, *request.related)))
+    _validate_related_ids(repository_root, schema, related)
+
+    effective_date = request.document_date or _today()
+    parent_slug = request.parent_id.split(":", maxsplit=1)[1]
+    parent_type = str(parent.metadata["type"])
+    artifact_id = f"artifact:{parent_type}:{parent_slug}:{request.slug}"
+    if artifact_id in _known_ids(repository_root, schema):
+        message = f"document ID already exists: {artifact_id}"
+        raise FileExistsError(message)
+    directory = ARTIFACT_DIRECTORIES[request.kind]
+    destination = repository_root / parent.path.parent / directory / f"{request.slug}.md"
+    _ensure_path_available(destination, repository_root)
+    template = (repository_root / schema.templates_root / "artifact.md").read_text(
+        encoding="utf-8",
+    )
+    rendered = _render_artifact_template(
+        template,
+        _ArtifactTemplateValues(
+            artifact_id=artifact_id,
+            kind=request.kind,
+            title=normalized_title,
+            related=related,
+            document_date=effective_date,
+        ),
     )
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(rendered, encoding="utf-8")
@@ -82,6 +183,7 @@ def capture_inbox(
 
     effective_date = capture_date or _today()
     path = repository_root / schema.inbox_root / f"{effective_date.isoformat()}.md"
+    _ensure_inside_repository(path, repository_root)
     item = f"- [ ] {normalized_text}\n"
     if path.exists():
         current = path.read_text(encoding="utf-8")
@@ -135,16 +237,21 @@ def _render_template(
     related_yaml = (
         "related: []"
         if not request.related
-        else "related:\n"
-        + "\n".join(f"  - {related_id}" for related_id in request.related)
+        else "related:\n" + "\n".join(f"  - {related_id}" for related_id in request.related)
     )
     rendered = RELATED_PATTERN.sub(related_yaml, rendered, count=1)
     return f"{rendered.rstrip()}\n"
 
 
 def _validate_slug(slug: str) -> None:
+    if len(slug) > MAX_SLUG_LENGTH:
+        message = f"slug must be at most {MAX_SLUG_LENGTH} characters"
+        raise ValueError(message)
     if SLUG_PATTERN.fullmatch(slug) is None:
         message = "slug must use lowercase letters, numbers, and single hyphens"
+        raise ValueError(message)
+    if slug.casefold() in WINDOWS_RESERVED_NAMES:
+        message = f"slug is reserved on Windows: {slug}"
         raise ValueError(message)
 
 
@@ -168,20 +275,60 @@ def _validate_related_ids(root: Path, schema: Schema, related: tuple[str, ...]) 
 
 
 def _known_ids(root: Path, schema: Schema) -> set[str]:
-    identifiers: set[str] = set()
-    for document_type, rule in schema.types.items():
-        suffix = "*/index.md" if document_type in {"project", "area"} else "**/*.md"
-        for path in root.glob(f"{rule.root.as_posix()}/{suffix}"):
-            if path.name == "README.md":
-                continue
-            try:
-                document = parse_document(path, root=root)
-            except (DocumentParseError, OSError, UnicodeError):
-                continue
-            identifier = document.metadata.get("id")
-            if isinstance(identifier, str):
-                identifiers.add(identifier)
-    return identifiers
+    documents, _ = discover_documents(root, schema)
+    artifacts, _ = discover_artifacts(root, schema, documents)
+    content: list[ContentDocument] = [*documents, *artifacts]
+    return {
+        document_id for document in content if (document_id := _document_id(document)) is not None
+    }
+
+
+def _document_id(document: ContentDocument) -> str | None:
+    value = document.metadata.get("id")
+    return value if isinstance(value, str) else None
+
+
+def _ensure_path_available(destination: Path, root: Path) -> None:
+    _ensure_inside_repository(destination, root)
+    if destination.exists():
+        message = f"document already exists: {destination.relative_to(root)}"
+        raise FileExistsError(message)
+    current = root
+    for component in destination.relative_to(root).parts:
+        if not current.is_dir():
+            break
+        conflicting = next(
+            (
+                child
+                for child in current.iterdir()
+                if child.name.casefold() == component.casefold() and child.name != component
+            ),
+            None,
+        )
+        if conflicting is not None:
+            message = f"document path conflicts by letter case: {destination.relative_to(root)}"
+            raise FileExistsError(message)
+        current /= component
+
+
+def _ensure_inside_repository(destination: Path, root: Path) -> None:
+    if destination.resolve().is_relative_to(root.resolve()):
+        return
+    message = f"destination escapes repository: {destination}"
+    raise ValueError(message)
+
+
+def _render_artifact_template(
+    template: str,
+    values: _ArtifactTemplateValues,
+) -> str:
+    rendered = template.replace("YYYY-MM-DD", values.document_date.isoformat())
+    rendered = ID_PATTERN.sub(f"id: {values.artifact_id}", rendered, count=1)
+    rendered = rendered.replace("kind: note", f"kind: {values.kind}", 1)
+    rendered = H1_PATTERN.sub(f"# {values.title}", rendered, count=1)
+    related_yaml = "related:\n" + "\n".join(f"  - {related_id}" for related_id in values.related)
+    rendered = RELATED_PATTERN.sub(related_yaml, rendered, count=1)
+    return f"{rendered.rstrip()}\n"
 
 
 def _today() -> date:

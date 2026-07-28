@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from workrepo.cli import main
 
 PROJECT_ROOT = Path(__file__).parents[1]
@@ -62,8 +64,76 @@ def test_cli_supports_capture_to_review_workflow(repository: Path) -> None:
         )
         == 0
     )
+    assert (
+        main(
+            (
+                *root_arguments,
+                "new",
+                "log",
+                "erp-upgrade-meeting",
+                "--title",
+                "ERP更改定例",
+                "--related",
+                "project:erp-upgrade",
+                "--template",
+                "meeting",
+                "--date",
+                "2026-07-29",
+            ),
+        )
+        == 0
+    )
+    assert (
+        main(
+            (
+                *root_arguments,
+                "new",
+                "artifact",
+                "weekly-report",
+                "--title",
+                "ERP更改週次報告",
+                "--parent",
+                "project:erp-upgrade",
+                "--kind",
+                "weekly-report",
+                "--date",
+                "2026-07-29",
+            ),
+        )
+        == 0
+    )
     assert main((*root_arguments, "refresh")) == 0
 
     dashboard = (repository / "DASHBOARD.md").read_text(encoding="utf-8")
     assert "Open items: **1**" in dashboard
     assert "[ERP更改](20-projects/erp-upgrade/index.md)" in dashboard
+    assert "## Participants" in (
+        repository / "10-log/2026/07/2026-07-27-week/2026-07-29-erp-upgrade-meeting.md"
+    ).read_text(encoding="utf-8")
+    assert (repository / "20-projects/erp-upgrade/reports/weekly-report.md").is_file()
+
+
+def test_cli_auto_detects_root_from_nested_directory(
+    repository: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Commands work from a Project directory without an explicit root."""
+    nested = repository / "20-projects/example"
+    nested.mkdir(parents=True)
+    monkeypatch.chdir(nested)
+
+    assert main(("capture", "Nested capture", "--date", "2026-07-29")) == 0
+    assert (repository / "00-inbox/2026-07-29.md").is_file()
+
+
+def test_cli_reports_missing_repository_without_traceback(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A path outside a repository receives one actionable error."""
+    result = main(("--root", str(tmp_path), "check"))
+
+    assert result == 1
+    output = capsys.readouterr().out
+    assert output.startswith("ERROR no work repository found")
+    assert "Traceback" not in output

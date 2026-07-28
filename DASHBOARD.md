@@ -16,6 +16,6 @@ _Inbox is clear._
 
 ## Areas
 
-| Area | Status | Health | Updated |
-| --- | --- | --- | --- |
-| _None_ |  |  |  |
+| Area | Status | Health | Last reviewed | Next review |
+| --- | --- | --- | --- | --- |
+| _None_ |  |  |  |  |

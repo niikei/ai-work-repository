@@ -35,7 +35,7 @@ def discover_artifacts(
     schema: Schema,
     documents: list[Document],
 ) -> tuple[list[Artifact], list[Issue]]:
-    """Read non-entity Markdown artifacts inside Projects and Areas."""
+    """Read typed and lightweight artifacts inside Projects and Areas."""
     managed_paths = {document.path for document in documents}
     paths = {
         path
@@ -49,10 +49,36 @@ def discover_artifacts(
     for path in sorted(paths):
         relative_path = path.relative_to(root)
         try:
-            headings = inspect_markdown(path.read_text(encoding="utf-8")).headings
+            source = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
             issues.append(Issue(relative_path, str(error)))
             continue
+        parent_id = _parent_identifier(relative_path, documents)
+        lines = source.splitlines()
+        if lines and lines[0] == "---":
+            try:
+                document = parse_document(path, root=root)
+            except (DocumentParseError, OSError, UnicodeError) as error:
+                issues.append(Issue(relative_path, str(error)))
+                continue
+            artifacts.append(
+                Artifact(
+                    path=document.path,
+                    title=document.title,
+                    metadata=document.metadata,
+                    parent_id=parent_id,
+                ),
+            )
+            continue
+        if source.lstrip("\ufeff \t\r\n").startswith("---\n"):
+            issues.append(
+                Issue(
+                    relative_path,
+                    "YAML frontmatter must start on the first line",
+                ),
+            )
+            continue
+        headings = inspect_markdown(source).headings
         if len(headings) != 1:
             issues.append(
                 Issue(relative_path, f"expected exactly one H1 heading, found {len(headings)}"),
@@ -61,8 +87,29 @@ def discover_artifacts(
         if not headings[0]:
             issues.append(Issue(relative_path, "H1 heading must not be empty"))
             continue
-        artifacts.append(Artifact(path=relative_path, title=headings[0]))
+        artifacts.append(
+            Artifact(
+                path=relative_path,
+                title=headings[0],
+                metadata={},
+                parent_id=parent_id,
+            ),
+        )
     return artifacts, issues
+
+
+def _parent_identifier(path: Path, documents: list[Document]) -> str | None:
+    candidates = (
+        document
+        for document in documents
+        if document.metadata.get("type") in INDEX_DOCUMENT_TYPES
+        and path.is_relative_to(document.path.parent)
+    )
+    parent = max(candidates, key=lambda item: len(item.path.parts), default=None)
+    if parent is None:
+        return None
+    value = parent.metadata.get("id")
+    return value if isinstance(value, str) else None
 
 
 def _content_pattern(document_type: str, rule: TypeRule) -> str:

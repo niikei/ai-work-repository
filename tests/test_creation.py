@@ -6,7 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from workrepo.creation import CreateRequest, capture_inbox, create_document
+from workrepo.creation import (
+    ArtifactRequest,
+    CreateRequest,
+    capture_inbox,
+    create_artifact,
+    create_document,
+)
 from workrepo.repository import build_index, check_repository
 
 DOCUMENT_DATE = date(2026, 7, 29)
@@ -64,6 +70,7 @@ def test_create_log_with_existing_relationship(repository: Path) -> None:
     payload = json.loads(build_index(repository).read_text(encoding="utf-8"))
     log_entry = next(item for item in payload["documents"] if item["type"] == "log")
     assert log_entry["derived"] == {
+        "backlinks": [],
         "iso_week": "2026-W31",
         "week_start": "2026-07-27",
     }
@@ -131,7 +138,95 @@ def test_capture_appends_normalized_inbox_items(repository: Path) -> None:
 
     assert path.relative_to(repository) == Path("00-inbox/2026-07-29.md")
     assert path.read_text(encoding="utf-8") == (
-        "# 2026-07-29 Inbox\n\n"
-        "- [ ] First thought\n"
-        "- [ ] Second thought\n"
+        "# 2026-07-29 Inbox\n\n- [ ] First thought\n- [ ] Second thought\n"
     )
+
+
+def test_create_typed_artifact_under_its_parent(repository: Path) -> None:
+    """Durable output receives an ID and an explicit owning relationship."""
+    create_document(
+        repository,
+        CreateRequest(
+            document_type="project",
+            slug="erp-upgrade",
+            title="ERP更改",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+
+    path = create_artifact(
+        repository,
+        ArtifactRequest(
+            slug="2026-07-27-weekly-report",
+            title="ERP更改 2026-07-27週次報告",
+            parent_id="project:erp-upgrade",
+            kind="weekly-report",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+
+    assert path.relative_to(repository) == Path(
+        "20-projects/erp-upgrade/reports/2026-07-27-weekly-report.md",
+    )
+    content = path.read_text(encoding="utf-8")
+    assert "id: artifact:project:erp-upgrade:2026-07-27-weekly-report" in content
+    assert "  - project:erp-upgrade" in content
+    assert check_repository(repository) == []
+
+
+@pytest.mark.parametrize("slug", ["con", "COM1"])
+def test_create_rejects_windows_reserved_slug(repository: Path, slug: str) -> None:
+    """Generated paths remain portable to Windows workstations."""
+    with pytest.raises(ValueError, match=r"reserved on Windows|lowercase"):
+        create_document(
+            repository,
+            CreateRequest(
+                document_type="project",
+                slug=slug,
+                title="Reserved",
+                document_date=DOCUMENT_DATE,
+            ),
+        )
+
+
+def test_check_rejects_conflated_area_status_and_health(repository: Path) -> None:
+    """Lifecycle and operational health use separate controlled vocabularies."""
+    path = create_document(
+        repository,
+        CreateRequest(
+            document_type="area",
+            slug="erp-operations",
+            title="ERP運用",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+    content = path.read_text(encoding="utf-8")
+    path.write_text(
+        content.replace("status: active", "status: attention").replace(
+            "health: unknown",
+            "health: attention",
+        ),
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert "invalid health 'attention'; expected one of: amber, green, red, unknown" in messages
+    assert "invalid status 'attention'; expected one of: active, paused, retired" in messages
+
+
+def test_create_rejects_case_only_directory_collision(repository: Path) -> None:
+    """A path that works on Linux cannot collide after checkout on Windows."""
+    existing = repository / "20-projects/Example"
+    existing.mkdir(parents=True)
+
+    with pytest.raises(FileExistsError, match="conflicts by letter case"):
+        create_document(
+            repository,
+            CreateRequest(
+                document_type="project",
+                slug="example",
+                title="Example",
+                document_date=DOCUMENT_DATE,
+            ),
+        )

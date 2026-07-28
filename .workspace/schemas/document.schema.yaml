@@ -1,4 +1,4 @@
-version: 2
+version: 3
 title_source: first_h1
 inbox_root: 00-inbox
 templates_root: 90-templates
@@ -17,9 +17,16 @@ types:
   project:
     root: 20-projects
     statuses: [planned, active, blocked, completed, cancelled]
+    required: [health]
+    values:
+      health: [unknown, green, amber, red]
   area:
     root: 30-areas
-    statuses: [active, attention, inactive]
+    statuses: [active, paused, retired]
+    required: [health, review_cycle, last_reviewed]
+    values:
+      health: [unknown, green, amber, red]
+      review_cycle: [weekly, monthly, quarterly, annual]
   role:
     root: 40-library/10-roles
     statuses: [draft, active, retired]
@@ -32,3 +39,15 @@ types:
   reference:
     root: 40-library/40-references
     statuses: [draft, active, retired]
+artifact:
+  roots: [20-projects, 30-areas]
+  statuses: [draft, active, final, superseded]
+  kinds:
+    - weekly-report
+    - report
+    - analysis
+    - specification
+    - deliverable
+    - attachment-note
+    - note
+  required: [type, id, kind, status, created, updated, related]

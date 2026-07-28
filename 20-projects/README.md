@@ -6,3 +6,6 @@ Projectごとに`20-projects/<slug>/index.md`を作り、目的、現在状態�
 短く保ちます。日々の詳細はLogへ記録し、Projectから関連付けます。
 
 Projectは複数のAreaに関係できるため、Areaの配下には置きません。
+
+途中の短いメモはfrontmatterなしで置けます。正式な報告、仕様、分析、成果物は
+`workrepo new artifact`でTyped Artifactとして作成し、安定IDと状態を持たせます。

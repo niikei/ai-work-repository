@@ -44,7 +44,14 @@ uv run workrepo new project erp-upgrade \
 # 日付付きのLogを作成
 uv run workrepo new log upgrade-meeting \
   --title "ERP更改定例会議" \
+  --template meeting \
   --related project:erp-upgrade
+
+# Projectに正式な週次報告を作成
+uv run workrepo new artifact 2026-07-27-weekly-report \
+  --title "ERP更改 2026-07-27週次報告" \
+  --parent project:erp-upgrade \
+  --kind weekly-report
 
 # 検証と生成物の更新
 uv run workrepo check
@@ -52,7 +59,8 @@ uv run workrepo refresh
 ```
 
 `new`は日付、ID、保存先、frontmatterをテンプレートから生成し、存在しない関連IDや
-既存ファイルの上書きを拒否します。
+既存ファイルの上書き、Windowsで利用できない名前、大文字小文字だけが異なる衝突を拒否します。
+コマンドは配下のディレクトリから実行しても、最寄りのリポジトリルートを自動検出します。
 
 Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理されます。
 月と年は週の開始日を基準にするため、月跨ぎの週も分断されません。AI向け索引には
@@ -61,17 +69,19 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 ## 文書規約
 
 - 文書タイトルの正はMarkdownのH1です。YAMLに`title`は書きません。
-- 管理対象文書には、テンプレートに沿ったYAML frontmatterを付けます。
+- Entityと正式な成果物には、テンプレートに沿ったYAML frontmatterを付けます。
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
-- ProjectとArea配下のMarkdown成果物は、frontmatterがなくてもAI向け索引へ収録されます。
+- ProjectとArea配下のMarkdownは、frontmatterなしなら軽量な作業メモとして索引されます。
+  frontmatterを付けた場合はTyped Artifactとして厳密に検証され、安定IDを持ちます。
 - `id`は`project:erp-upgrade`のような種類付きの安定IDにします。
 - 関係はファイルパスではなく`related`に安定IDを列挙します。
 - ProjectとAreaは親子にせず、多対多で関連付けます。
 - Word、Excel、PDF、画像の原本は保持し、必要なら同じ場所にMarkdownの説明を添えます。
 
 詳しい判断基準は
-[分類ガイド](40-library/40-references/classification-guide.md)を参照してください。
+[分類ガイド](40-library/40-references/classification-guide.md)と
+[文書契約](40-library/40-references/document-contract.md)を参照してください。
 
 ## Obsidian
 
@@ -102,6 +112,7 @@ uv run ruff check .
 ```
 
 開発依存関係はuvの既定の`dev`グループなので、通常は`--extra dev`を付けません。
+CIはLinuxとWindowsの両方で、検証、生成物の差分、Ruff、mypy、pytestを確認します。
 
 ## コードとデータの境界
 

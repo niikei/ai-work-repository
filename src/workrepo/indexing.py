@@ -1,42 +1,31 @@
 """Deterministic machine-readable index generation."""
 
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from workrepo.calendar import work_week
-from workrepo.discovery import discover_artifacts, discover_documents
-from workrepo.models import Artifact, Document
-from workrepo.schema import load_schema
-from workrepo.validation import check_repository
+from workrepo.models import Artifact, ContentDocument, Document
+from workrepo.review import next_review
+from workrepo.state import RepositoryState
+from workrepo.validation import require_repository
 
 INDEX_OUTPUT = Path(".workspace/indexes/documents.json")
 
 
-def build_index(root: Path) -> Path:
+def build_index(root: Path, *, state: RepositoryState | None = None) -> Path:
     """Validate the repository and write its entity and artifact index."""
-    repository_root = root.resolve()
-    issues = check_repository(repository_root)
-    if issues:
-        details = "\n".join(str(issue) for issue in issues)
-        message = f"cannot build index while validation issues exist:\n{details}"
-        raise ValueError(message)
-
-    schema = load_schema(repository_root)
-    documents, parse_issues = discover_documents(repository_root, schema)
-    if parse_issues:
-        message = "documents changed while building the index"
-        raise RuntimeError(message)
-    artifacts, artifact_issues = discover_artifacts(repository_root, schema, documents)
-    if artifact_issues:
-        message = "artifacts changed while building the index"
-        raise RuntimeError(message)
+    repository_state = state or require_repository(root)
+    repository_root = repository_state.root
+    documents = repository_state.documents
+    artifacts = repository_state.artifacts
+    backlinks = _backlinks([*documents, *artifacts])
     entries = [
-        *(_entity_entry(document) for document in documents),
-        *(_artifact_entry(artifact) for artifact in artifacts),
+        *(_entity_entry(document, backlinks) for document in documents),
+        *(_artifact_entry(artifact, backlinks) for artifact in artifacts),
     ]
     payload = {
-        "version": 2,
+        "version": 3,
         "documents": sorted(entries, key=lambda item: str(item["path"])),
     }
     output = repository_root / INDEX_OUTPUT
@@ -48,11 +37,11 @@ def build_index(root: Path) -> Path:
     return output
 
 
-def _entity_entry(document: Document) -> dict[str, object]:
-    metadata = {
-        key: _json_value(value)
-        for key, value in sorted(document.metadata.items())
-    }
+def _entity_entry(
+    document: Document,
+    backlinks: dict[str, list[str]],
+) -> dict[str, object]:
+    metadata = {key: _json_value(value) for key, value in sorted(document.metadata.items())}
     return {
         "kind": "entity",
         "id": metadata["id"],
@@ -60,19 +49,30 @@ def _entity_entry(document: Document) -> dict[str, object]:
         "title": document.title,
         "path": document.path.as_posix(),
         "metadata": metadata,
-        "derived": _derived_values(document),
+        "derived": {
+            **_derived_values(document),
+            "backlinks": backlinks.get(str(metadata["id"]), []),
+        },
     }
 
 
-def _artifact_entry(artifact: Artifact) -> dict[str, object]:
+def _artifact_entry(
+    artifact: Artifact,
+    backlinks: dict[str, list[str]],
+) -> dict[str, object]:
+    metadata = {key: _json_value(value) for key, value in sorted(artifact.metadata.items())}
+    artifact_id = metadata.get("id")
     return {
         "kind": "artifact",
-        "id": None,
+        "id": artifact_id,
         "type": "artifact",
         "title": artifact.title,
         "path": artifact.path.as_posix(),
-        "metadata": {},
-        "derived": {},
+        "metadata": metadata,
+        "derived": {
+            "parent_id": artifact.parent_id,
+            "backlinks": backlinks.get(str(artifact_id), []) if artifact_id is not None else [],
+        },
     }
 
 
@@ -87,16 +87,40 @@ def _json_value(value: object) -> object:
 
 
 def _derived_values(document: Document) -> dict[str, object]:
-    if document.metadata.get("type") != "log":
-        return {}
-    log_date = _date_value(document.metadata.get("date"))
-    if log_date is None:
-        return {}
-    week = work_week(log_date)
-    return {
-        "iso_week": week.iso_label,
-        "week_start": week.start.isoformat(),
-    }
+    document_type = document.metadata.get("type")
+    if document_type == "log":
+        log_date = _date_value(document.metadata.get("date"))
+        if log_date is None:
+            return {}
+        week = work_week(log_date)
+        return {
+            "iso_week": week.iso_label,
+            "week_start": week.start.isoformat(),
+        }
+    if document_type == "area":
+        last_reviewed = _date_value(document.metadata.get("last_reviewed"))
+        cycle = document.metadata.get("review_cycle")
+        if last_reviewed is None or not isinstance(cycle, str):
+            return {}
+        review_date = next_review(last_reviewed, cycle)
+        return {
+            "next_review": review_date.isoformat(),
+            "review_overdue": review_date < datetime.now(tz=UTC).astimezone().date(),
+        }
+    return {}
+
+
+def _backlinks(content: list[ContentDocument]) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = {}
+    for document in content:
+        source_id = document.metadata.get("id")
+        related = document.metadata.get("related")
+        if not isinstance(source_id, str) or not isinstance(related, list):
+            continue
+        for target_id in related:
+            if isinstance(target_id, str):
+                result.setdefault(target_id, []).append(source_id)
+    return {target_id: sorted(source_ids) for target_id, source_ids in result.items()}
 
 
 def _date_value(value: object) -> date | None:

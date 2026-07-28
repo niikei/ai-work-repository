@@ -1,24 +1,28 @@
 """Human-readable overview generation for current repository state."""
 
 import re
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from urllib.parse import quote
 
 from workrepo.models import Document
-from workrepo.repository import read_documents
-from workrepo.schema import load_schema
+from workrepo.review import next_review
+from workrepo.state import RepositoryState
+from workrepo.validation import require_repository
 
 DASHBOARD_PATH = Path("DASHBOARD.md")
 OPEN_ITEM_PATTERN = re.compile(r"^- \[ \]", flags=re.MULTILINE)
 INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
+INACTIVE_AREA_STATUSES = frozenset({"retired"})
+HEALTH_PRIORITY = {"red": 0, "amber": 1, "unknown": 2, "green": 3}
 
 
-def generate_dashboard(root: Path) -> Path:
+def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> Path:
     """Generate a deterministic Markdown dashboard from canonical state."""
-    repository_root = root.resolve()
-    schema = load_schema(repository_root)
-    documents = read_documents(repository_root)
+    repository_state = state or require_repository(root)
+    repository_root = repository_state.root
+    schema = repository_state.schema
+    documents = list(repository_state.documents)
     projects = _documents_of_type(documents, "project")
     areas = _documents_of_type(documents, "area")
     inbox_files = sorted(
@@ -47,14 +51,12 @@ def generate_dashboard(root: Path) -> Path:
 
 def _inbox_section(root: Path, paths: list[Path]) -> tuple[str, ...]:
     open_items = sum(
-        len(OPEN_ITEM_PATTERN.findall(path.read_text(encoding="utf-8")))
-        for path in paths
+        len(OPEN_ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))) for path in paths
     )
     if not paths:
         return ("## Inbox", "", "Open items: **0**", "", "_Inbox is clear._")
     links = tuple(
-        f"- [{_escape_text(path.stem)}]({_path_link(path.relative_to(root))})"
-        for path in paths
+        f"- [{_escape_text(path.stem)}]({_path_link(path.relative_to(root))})" for path in paths
     )
     return ("## Inbox", "", f"Open items: **{open_items}**", "", *links)
 
@@ -65,7 +67,7 @@ def _project_section(documents: list[Document]) -> tuple[str, ...]:
         for document in documents
         if _metadata_text(document, "status") not in INACTIVE_PROJECT_STATUSES
     ]
-    rows = tuple(_state_row(document) for document in active)
+    rows = tuple(_state_row(document) for document in _sort_by_health(active))
     return (
         "## Active projects",
         "",
@@ -76,13 +78,27 @@ def _project_section(documents: list[Document]) -> tuple[str, ...]:
 
 
 def _area_section(documents: list[Document]) -> tuple[str, ...]:
-    rows = tuple(_state_row(document) for document in documents)
+    today = datetime.now(tz=UTC).astimezone().date()
+    visible = [
+        document
+        for document in documents
+        if _metadata_text(document, "status") not in INACTIVE_AREA_STATUSES
+    ]
+    ordered = sorted(
+        visible,
+        key=lambda document: (
+            not _is_review_overdue(document, today),
+            HEALTH_PRIORITY.get(_metadata_text(document, "health"), 99),
+            document.title.casefold(),
+        ),
+    )
+    rows = tuple(_area_row(document, today) for document in ordered)
     return (
         "## Areas",
         "",
-        "| Area | Status | Health | Updated |",
-        "| --- | --- | --- | --- |",
-        *(rows or ("| _None_ |  |  |  |",)),
+        "| Area | Status | Health | Last reviewed | Next review |",
+        "| --- | --- | --- | --- | --- |",
+        *(rows or ("| _None_ |  |  |  |  |",)),
     )
 
 
@@ -95,15 +111,53 @@ def _state_row(document: Document) -> str:
     return f"| [{title}]({link}) | {status} | {health} | {updated} |"
 
 
+def _area_row(document: Document, today: date) -> str:
+    title = _escape_text(document.title)
+    link = _path_link(document.path)
+    status = _escape_text(_metadata_text(document, "status"))
+    health = _escape_text(_metadata_text(document, "health"))
+    last_reviewed = _document_date(document, "last_reviewed")
+    cycle = _metadata_text(document, "review_cycle")
+    review_date = next_review(last_reviewed, cycle)
+    review_text = review_date.isoformat()
+    if review_date < today:
+        review_text = f"**{review_text} (overdue)**"
+    return (
+        f"| [{title}]({link}) | {status} | {health} | {last_reviewed.isoformat()} | {review_text} |"
+    )
+
+
 def _documents_of_type(documents: list[Document], document_type: str) -> list[Document]:
     return sorted(
-        (
-            document
-            for document in documents
-            if document.metadata.get("type") == document_type
-        ),
+        (document for document in documents if document.metadata.get("type") == document_type),
         key=lambda document: document.title.casefold(),
     )
+
+
+def _sort_by_health(documents: list[Document]) -> list[Document]:
+    return sorted(
+        documents,
+        key=lambda document: (
+            HEALTH_PRIORITY.get(_metadata_text(document, "health"), 99),
+            document.title.casefold(),
+        ),
+    )
+
+
+def _is_review_overdue(document: Document, today: date) -> bool:
+    last_reviewed = _document_date(document, "last_reviewed")
+    cycle = _metadata_text(document, "review_cycle")
+    return next_review(last_reviewed, cycle) < today
+
+
+def _document_date(document: Document, field: str) -> date:
+    value = document.metadata[field]
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        return date.fromisoformat(value)
+    message = f"{document.path}: {field} is not a date"
+    raise ValueError(message)
 
 
 def _metadata_text(document: Document, field: str, *, default: str = "") -> str:

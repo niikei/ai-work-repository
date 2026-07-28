@@ -8,6 +8,9 @@
 - Do not manually edit content between `workrepo:related` markers; run `workrepo refresh`.
 - Do not edit `DASHBOARD.md` directly; it is generated from Inbox, Project, and Area state.
 - Prefer `workrepo new` and `workrepo capture` when creating managed content.
+- Use `workrepo new artifact` for durable reports, analyses, specifications, and deliverables.
+- Frontmatter-free Project or Area Markdown is lightweight working material. If frontmatter exists, it must satisfy the typed Artifact contract.
+- Keep Area lifecycle `status`, current `health`, and `last_reviewed` semantically separate.
 - Do not edit original Word, Excel, PDF, or image files unless explicitly requested.
 - Keep generated and temporary document data under `.workspace/cache/` or `.workspace/indexes/`.
 - Do not move, delete, archive, or broadly rewrite documents without explicit confirmation.

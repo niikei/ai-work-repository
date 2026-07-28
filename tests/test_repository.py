@@ -14,7 +14,7 @@ from workrepo.repository import (
 
 PROJECT_ROOT = Path(__file__).parents[1]
 DUPLICATE_DOCUMENT_COUNT = 2
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 
 def write_document(
@@ -35,6 +35,7 @@ def write_document(
                 "type: project",
                 f"id: {identifier}",
                 "status: active",
+                "health: unknown",
                 "created: 2026-07-28",
                 "updated: 2026-07-28",
                 f"related: {related}",
@@ -140,6 +141,47 @@ def test_sync_related_links_rejects_malformed_markers(repository: Path) -> None:
         sync_related_links(repository)
 
 
+def test_check_rejects_duplicate_generated_blocks(repository: Path) -> None:
+    """Multiple generated sections cannot be ambiguously rewritten."""
+    source = write_document(repository, "20-projects/source/index.md")
+    block = (
+        "\n## Related documents\n\n"
+        "<!-- workrepo:related:start -->\n"
+        "- stale\n"
+        "<!-- workrepo:related:end -->\n"
+    )
+    source.write_text(f"{source.read_text(encoding='utf-8')}{block}{block}", encoding="utf-8")
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == [
+        "20-projects/source/index.md: generated related document markers are malformed",
+    ]
+
+
+def test_sync_repairs_stale_generated_link(repository: Path) -> None:
+    """Canonical IDs can repair generated paths after a target is moved."""
+    source = write_document(
+        repository,
+        "20-projects/source/index.md",
+        identifier="project:source",
+        related="[project:target]",
+    )
+    target = write_document(
+        repository,
+        "20-projects/target/index.md",
+        identifier="project:target",
+        title="Target",
+    )
+    sync_related_links(repository)
+    moved = repository / "20-projects/renamed/index.md"
+    moved.parent.mkdir()
+    target.rename(moved)
+
+    assert sync_related_links(repository) == 1
+    assert "[Target](../renamed/index.md)" in source.read_text(encoding="utf-8")
+
+
 def test_build_index_includes_project_artifact(repository: Path) -> None:
     """Project Markdown artifacts are discoverable without entity frontmatter."""
     write_document(repository, "20-projects/example/index.md")
@@ -154,6 +196,92 @@ def test_build_index_includes_project_artifact(repository: Path) -> None:
     assert artifact["id"] is None
     assert artifact["title"] == "Weekly report"
     assert artifact["path"] == "20-projects/example/reports/weekly.md"
+    assert artifact["derived"]["parent_id"] == "project:example"
+
+
+def test_typed_artifact_metadata_is_validated_and_indexed(repository: Path) -> None:
+    """Artifact frontmatter is canonical data and is never silently discarded."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/reports/weekly.md"
+    report.parent.mkdir(parents=True)
+    report.write_text(
+        """---
+type: artifact
+id: artifact:project:example:weekly
+kind: weekly-report
+status: final
+created: 2026-07-28
+updated: 2026-07-28
+related: [project:example]
+---
+
+# Weekly report
+""",
+        encoding="utf-8",
+    )
+
+    payload = json.loads(build_index(repository).read_text(encoding="utf-8"))
+    artifact = next(item for item in payload["documents"] if item["kind"] == "artifact")
+    project = next(item for item in payload["documents"] if item["kind"] == "entity")
+
+    assert artifact["id"] == "artifact:project:example:weekly"
+    assert artifact["metadata"]["kind"] == "weekly-report"
+    assert project["derived"]["backlinks"] == ["artifact:project:example:weekly"]
+
+
+def test_artifact_frontmatter_cannot_masquerade_as_an_entity(repository: Path) -> None:
+    """Any frontmatter below a Project must follow the artifact contract."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/report.md"
+    report.write_text(
+        "---\ntype: report\n---\n\n# Report\n",
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == ["frontmatter in an artifact must declare type: artifact"]
+
+
+def test_artifact_frontmatter_after_blank_line_is_not_ignored(repository: Path) -> None:
+    """Misplaced YAML produces a correction instead of becoming lightweight data."""
+    write_document(repository, "20-projects/example/index.md")
+    report = repository / "20-projects/example/report.md"
+    report.write_text(
+        "\n---\ntype: artifact\n---\n\n# Report\n",
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == ["YAML frontmatter must start on the first line"]
+
+
+def test_schema_version_is_enforced(repository: Path) -> None:
+    """An incompatible schema cannot be interpreted with silent defaults."""
+    schema_path = repository / ".workspace/schemas/document.schema.yaml"
+    schema_path.write_text(
+        schema_path.read_text(encoding="utf-8").replace("version: 3", "version: 99"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unsupported schema version 99"):
+        check_repository(repository)
+
+
+def test_project_health_uses_the_controlled_vocabulary(repository: Path) -> None:
+    """Near-miss health labels do not create fragmented dashboard states."""
+    path = write_document(repository, "20-projects/example/index.md")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("health: unknown", "health: ambre"),
+        encoding="utf-8",
+    )
+
+    messages = [issue.message for issue in check_repository(repository)]
+
+    assert messages == [
+        "invalid health 'ambre'; expected one of: amber, green, red, unknown",
+    ]
 
 
 def test_check_reports_broken_markdown_link(repository: Path) -> None:
