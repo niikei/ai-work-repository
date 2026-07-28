@@ -5,7 +5,7 @@ from pathlib import Path
 
 from workrepo.creation import CreateRequest, capture_inbox, create_document
 from workrepo.dashboard import DASHBOARD_PATH, generate_dashboard
-from workrepo.repository import check_repository
+from workrepo.repository import check_repository, refresh_repository
 
 DOCUMENT_DATE = date(2026, 7, 29)
 
@@ -61,3 +61,26 @@ def test_dashboard_hides_retired_area(repository: Path) -> None:
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
     assert "旧運用" not in content
+
+
+def test_refresh_repairs_dashboard_after_canonical_document_is_deleted(
+    repository: Path,
+) -> None:
+    """A stale generated link must not prevent the command that repairs it."""
+    project = create_document(
+        repository,
+        CreateRequest(
+            document_type="project",
+            slug="temporary",
+            title="Temporary project",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+    generate_dashboard(repository)
+    assert "temporary/index.md" in (repository / DASHBOARD_PATH).read_text(encoding="utf-8")
+    project.unlink()
+
+    refresh_repository(repository)
+
+    assert "temporary/index.md" not in (repository / DASHBOARD_PATH).read_text(encoding="utf-8")
+    assert check_repository(repository) == []

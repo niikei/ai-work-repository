@@ -31,6 +31,7 @@ IGNORED_MARKDOWN_DIRECTORIES = frozenset(
         ".workspace",
     },
 )
+GENERATED_MARKDOWN_FILES = frozenset({"DASHBOARD.md"})
 
 
 def check_repository(root: Path) -> list[Issue]:
@@ -495,7 +496,8 @@ def _markdown_paths(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.rglob("*.md")
-        if not set(path.relative_to(root).parts) & IGNORED_MARKDOWN_DIRECTORIES
+        if path.relative_to(root).as_posix() not in GENERATED_MARKDOWN_FILES
+        and not set(path.relative_to(root).parts) & IGNORED_MARKDOWN_DIRECTORIES
     )
 
 
