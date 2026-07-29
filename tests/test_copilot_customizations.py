@@ -189,6 +189,19 @@ def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:
     normalized = " ".join(source.split())
 
     assert (
+        "`uv run workrepo review-context --from START --to END --limit 20 --json`"
+        in normalized
+    )
+    assert "Treat its paths as the complete initial discovery set." in normalized
+    assert (
+        "Do not use memory, editor search, `workrepo list`, `workrepo search`, "
+        "`rg`, `find`, or file globs"
+    ) in normalized
+    assert "If a section is truncated, increase `--limit` once" in normalized
+    assert "period activity, Log relationships, blocked or unhealthy state" in normalized
+    assert "Do not automatically open every candidate." in normalized
+    assert "open only records needed to support a finding" in normalized
+    assert (
         "Change Area `last_reviewed` only when that Area was actually reviewed, "
         "not merely synchronized."
     ) in normalized

@@ -9,6 +9,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- bounded human- and machine-readable `workrepo review-context` evidence selection for period
+  reviews;
 - isolated `workrepo check --ref` validation for historical Git snapshots, including deterministic
   generated-view reproduction without modifying the current worktree;
 - reversible `workrepo archive` and `workrepo restore` lifecycle operations;

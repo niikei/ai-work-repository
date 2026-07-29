@@ -84,6 +84,10 @@ uv run workrepo list --type project --status active
 uv run workrepo list --type project --area area:erp-operations
 uv run workrepo search "cutover decision" --type artifact
 
+# 期間レビュー用の根拠を上限付きで取得する（AI向けは--json）
+uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20
+uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20 --json
+
 # 完了済みProjectを月次レビューでArchiveし、必要なら戻す
 uv run workrepo archive project:erp-upgrade
 uv run workrepo restore project:erp-upgrade
@@ -101,6 +105,10 @@ uv run workrepo search "cutover decision" --archived-only
 Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理されます。
 月と年は週の開始日を基準にするため、月跨ぎの週も分断されません。AI向け索引には
 `2026-W31`のISO週番号も自動的に収録されます。
+
+`review-context`は期間内InboxとLogに加え、Logから参照されるProject・Area、期間内に更新された
+状態、blocked・amber・red、Areaのレビュー期限を理由付きで返します。各セクションを
+`--limit`で制限するため、AIがリポジトリ全体を走査せずにレビュー対象を選べます。
 
 ## 文書規約
 

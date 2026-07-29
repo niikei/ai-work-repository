@@ -8,14 +8,19 @@ user-invocable: false
 
 1. Establish the requested period and scope. If neither is given, use the current work week across
    the workspace and say so.
-2. Start with `uv run workrepo list`, `uv run workrepo search`, and
-   `uv run workrepo inbox status` to narrow the review. Never scan the full tree.
-3. Inspect only the relevant:
-   - dated Inbox files in the period;
-   - Logs in the period;
-   - active Project `index.md` files and relevant artifacts;
-   - active Area `index.md` files and their review dates;
+2. Start with
+   `uv run workrepo review-context --from START --to END --limit 20 --json`.
+   Treat its paths as the complete initial discovery set. Do not use memory, editor search,
+   `workrepo list`, `workrepo search`, `rg`, `find`, or file globs to rediscover review candidates.
+   If a section is truncated, increase `--limit` once instead of changing discovery mechanisms.
+3. Inspect only the returned:
+   - Inbox files and open items;
+   - period Logs;
+   - Project and Area candidates selected for period activity, Log relationships, blocked or
+     unhealthy state, or review due dates;
    - `DASHBOARD.md` only as a generated overview, never as canonical state.
+   Do not automatically open every candidate. Use the returned reasons and metadata first, then
+   open only records needed to support a finding in the requested scope.
 4. Separate findings into completed outcomes, current state, risks or blockers, decisions, and next
    actions. Cite repository-relative source paths.
 5. Treat missing evidence as unknown. Never infer completion from silence or convert a proposal into

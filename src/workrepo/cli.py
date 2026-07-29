@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import date
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -34,6 +35,11 @@ from workrepo.repository import (
     build_index,
     refresh_repository,
     sync_related_links,
+)
+from workrepo.review_context import (
+    ReviewContext,
+    build_review_context,
+    review_context_payload,
 )
 from workrepo.root import find_repository_root
 from workrepo.validation import inbox_report, require_repository
@@ -71,8 +77,12 @@ def _dispatch(
         return _run_capture(root, args.text, capture_date=args.date)
     if args.command in {"archive", "restore"}:
         return _run_lifecycle(root, args)
-    if args.command in {"list", "search"}:
-        return _run_browse(root, args)
+    if args.command in {"list", "search", "review-context"}:
+        return (
+            _run_review_context(root, args)
+            if args.command == "review-context"
+            else _run_browse(root, args)
+        )
     return _dispatch_auxiliary(parser, args, root)
 
 
@@ -218,6 +228,37 @@ def _build_parser() -> argparse.ArgumentParser:
         help="synchronize links, indexes, dashboard, and navigation",
     )
     _add_browse_commands(subparsers)
+    review_context_parser = subparsers.add_parser(
+        "review-context",
+        help="select bounded evidence for a period review",
+    )
+    review_context_parser.add_argument(
+        "--from",
+        dest="period_start",
+        type=_iso_date,
+        required=True,
+        metavar="DATE",
+        help="inclusive review start date in YYYY-MM-DD format",
+    )
+    review_context_parser.add_argument(
+        "--to",
+        dest="period_end",
+        type=_iso_date,
+        required=True,
+        metavar="DATE",
+        help="inclusive review end date in YYYY-MM-DD format",
+    )
+    review_context_parser.add_argument(
+        "--limit",
+        type=_positive_int,
+        default=20,
+        help="maximum rows per section (default: 20)",
+    )
+    review_context_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="emit stable machine-readable JSON",
+    )
     inbox_parser = subparsers.add_parser(
         "inbox",
         help="inspect and review temporary capture",
@@ -589,6 +630,59 @@ def _run_browse(root: Path, args: argparse.Namespace) -> int:
     for item in items:
         print(display_row(item))
     return 0
+
+
+def _run_review_context(root: Path, args: argparse.Namespace) -> int:
+    try:
+        context = build_review_context(
+            require_repository(root),
+            period_start=args.period_start,
+            period_end=args.period_end,
+            limit=args.limit,
+        )
+    except COMMAND_ERRORS as error:
+        print(f"ERROR {error}")
+        return 1
+    if args.json:
+        print(json.dumps(review_context_payload(context), ensure_ascii=False, indent=2))
+        return 0
+    _print_review_context(context)
+    return 0
+
+
+def _print_review_context(context: ReviewContext) -> None:
+    print(f"Review period: {context.period_start} to {context.period_end}")
+    print("\nInbox:")
+    if not context.inbox_files:
+        print("  none")
+    for item in context.inbox_files:
+        print(
+            f"  {item.path}  open={len(item.open_items)} "
+            f"completed={item.completed_items} age={item.age_days}d",
+        )
+        for text in item.open_items:
+            print(f"    - {text}")
+    _print_truncated(truncated=context.inbox_truncated)
+
+    print("\nLogs:")
+    if not context.logs:
+        print("  none")
+    for document in context.logs:
+        print(f"  {display_row(document)}")
+    _print_truncated(truncated=context.logs_truncated)
+
+    print("\nProject and Area candidates:")
+    if not context.candidates:
+        print("  none")
+    for candidate in context.candidates:
+        reasons = ", ".join(candidate.reasons)
+        print(f"  [{reasons}] {display_row(candidate.document)}")
+    _print_truncated(truncated=context.candidates_truncated)
+
+
+def _print_truncated(*, truncated: bool) -> None:
+    if truncated:
+        print("  ... truncated; increase --limit to inspect more")
 
 
 def _run_inbox(root: Path, args: argparse.Namespace) -> int:
