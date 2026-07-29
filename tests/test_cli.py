@@ -113,6 +113,33 @@ def test_cli_supports_capture_to_review_workflow(repository: Path) -> None:
     assert (repository / "20-projects/erp-upgrade/reports/weekly-report.md").is_file()
 
 
+def test_cli_explains_that_log_slug_omits_date(
+    repository: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A common date-prefix mistake receives an actionable correction."""
+    result = main(
+        (
+            "--root",
+            str(repository),
+            "new",
+            "log",
+            "2026-07-29-daily",
+            "--title",
+            "Daily Log",
+            "--date",
+            "2026-07-29",
+        ),
+    )
+
+    assert result == 1
+    assert (
+        capsys.readouterr().out
+        == "ERROR log slug must omit the date because it is added automatically; "
+        "use 'daily', not '2026-07-30-daily'\n"
+    )
+
+
 def test_cli_auto_detects_root_from_nested_directory(
     repository: Path,
     monkeypatch: pytest.MonkeyPatch,

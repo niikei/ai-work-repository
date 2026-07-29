@@ -137,6 +137,23 @@ def test_create_daily_log_consolidates_small_events(repository: Path) -> None:
     assert check_repository(repository) == []
 
 
+@pytest.mark.parametrize("slug", ["2026-07-29", "2026-07-29-daily"])
+def test_create_log_rejects_date_prefixed_slug(repository: Path, slug: str) -> None:
+    """Log paths cannot repeat a date already supplied by document metadata."""
+    with pytest.raises(ValueError, match="log slug must omit the date"):
+        create_document(
+            repository,
+            CreateRequest(
+                document_type="log",
+                slug=slug,
+                title="Daily Log",
+                document_date=DOCUMENT_DATE,
+            ),
+        )
+
+    assert not any((repository / "10-log").rglob(f"*{slug}.md"))
+
+
 def test_create_rejects_unknown_relationship(repository: Path) -> None:
     """A typo in a relationship cannot create an invalid document."""
     request = CreateRequest(

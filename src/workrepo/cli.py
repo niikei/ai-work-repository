@@ -141,7 +141,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="create an entity or typed artifact from a repository template",
     )
     new_parser.add_argument("document_type", choices=(*DOCUMENT_TYPES, "artifact"))
-    new_parser.add_argument("slug", help="stable lowercase name used in the ID and path")
+    new_parser.add_argument(
+        "slug",
+        help=(
+            "stable lowercase name used in the ID and path; "
+            "for logs omit the automatically added date"
+        ),
+    )
     new_parser.add_argument("--title", required=True, help="canonical H1 title")
     new_parser.add_argument(
         "--related",

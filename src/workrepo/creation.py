@@ -45,6 +45,7 @@ ARTIFACT_DIRECTORIES = {
     "external-resource": "links",
 }
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+LOG_DATE_PREFIX_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}(?:-|$)")
 MAX_SLUG_LENGTH = 64
 WINDOWS_RESERVED_NAMES = frozenset(
     {
@@ -119,6 +120,7 @@ def create_document(
         message = f"unsupported document type: {request.document_type}"
         raise ValueError(message)
     _validate_slug(request.slug)
+    _validate_log_slug(request.document_type, request.slug)
     normalized_title = _normalize_title(request.title)
     _validate_related_ids(repository_root, schema, request.related)
 
@@ -299,6 +301,15 @@ def _validate_slug(slug: str) -> None:
         raise ValueError(message)
     if slug.casefold() in WINDOWS_RESERVED_NAMES:
         message = f"slug is reserved on Windows: {slug}"
+        raise ValueError(message)
+
+
+def _validate_log_slug(document_type: str, slug: str) -> None:
+    if document_type == "log" and LOG_DATE_PREFIX_PATTERN.match(slug) is not None:
+        message = (
+            "log slug must omit the date because it is added automatically; "
+            "use 'daily', not '2026-07-30-daily'"
+        )
         raise ValueError(message)
 
 
