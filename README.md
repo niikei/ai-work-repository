@@ -4,6 +4,8 @@
 プライベートリポジトリ用テンプレートです。
 
 このテンプレートと付属ツールは[MIT License](LICENSE)で公開されています。
+変更履歴は[CHANGELOG.md](CHANGELOG.md)、貢献方法は[CONTRIBUTING.md](CONTRIBUTING.md)、
+脆弱性の報告方法は[SECURITY.md](SECURITY.md)を参照してください。
 
 ## 5つの入口
 
