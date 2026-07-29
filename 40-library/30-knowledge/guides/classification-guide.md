@@ -1,6 +1,6 @@
 ---
-type: reference
-id: reference:classification-guide
+type: guide
+id: guide:classification-guide
 status: active
 created: 2026-07-28
 updated: 2026-07-29
@@ -15,7 +15,14 @@ related: []
 2. 特定の日時に起きた事実ならLogへ置く。
 3. 終了条件がある変化ならProjectで管理する。
 4. 終了せず、継続的に状態を保つ責任ならAreaで管理する。
-5. 複数の文脈で再利用する知識ならLibraryへ整理する。
+5. 複数の文脈で再利用する対象、方法、知識、外部原本への案内ならLibraryへ整理する。
+
+Libraryでは次の質問で主目的を一つ選びます。
+
+1. 何が存在するか → Catalog。
+2. どのように仕事をするか → Playbook。
+3. 何を知っているか → Knowledge。
+4. 原本はどこにあるか → Resource。
 
 ## 迷いやすい例
 
@@ -24,10 +31,13 @@ related: []
 | ERP更改の進捗 | Project | 完了条件のある変化 |
 | ERPの日常運用 | Area | 継続的に健全性を維持する責任 |
 | ERP更改会議の議事録 | Log | 特定日に起きた出来事 |
-| ERPの構成と制約 | System | 長期的に参照する技術知識 |
-| 月次締め支援の手順 | Process | 繰り返し実行する方法 |
+| ERPの構成と制約 | CatalogのSystem | 管理対象そのもの |
+| 月次締め支援の業務フロー | PlaybookのProcess | 繰り返し実行する方法 |
+| Transportの具体的な操作 | PlaybookのProcedure | 特定作業の手順 |
+| SAP Clientの説明 | KnowledgeのConcept | 再利用する説明 |
+| 外部にある正式運用手順書 | Resource | 原本への管理された案内 |
 | 新任者としての立ち上がり | Project | 期間と完了条件がある |
-| 新任者に期待される役割 | Role | 立場と期待の定義 |
+| 新任者に期待される役割 | CatalogのRole | 立場と期待の定義 |
 | 新任期間の週報 | Project内の成果物 | そのProject固有の継続成果 |
 
 ## 状態と履歴を混ぜない

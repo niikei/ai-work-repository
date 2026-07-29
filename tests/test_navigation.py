@@ -94,3 +94,40 @@ def test_navigation_groups_projects_without_moving_canonical_files(
     assert "[SAP Upgrade](20-projects/sap-upgrade/index.md)" in content
     assert "### No Area assigned" in content
     assert "[Unassigned Project](20-projects/unassigned/index.md)" in content
+
+
+def test_navigation_summarizes_library_without_listing_every_record(
+    repository: Path,
+) -> None:
+    """Library navigation remains compact as type directories grow."""
+    for document_type, slug in (
+        ("system", "erp"),
+        ("system", "m365"),
+        ("process", "incident-management"),
+        ("guide", "classification"),
+    ):
+        create_document(
+            repository,
+            CreateRequest(
+                document_type=document_type,
+                slug=slug,
+                title=slug,
+                document_date=DOCUMENT_DATE,
+            ),
+        )
+
+    content = generate_navigation(repository).read_text(encoding="utf-8")
+
+    assert "## Library" in content
+    assert (
+        "| Catalog | system | 2 | [40-library/10-catalog/systems](40-library/10-catalog/systems/) |"
+    ) in content
+    assert (
+        "| Playbooks | process | 1 | "
+        "[40-library/20-playbooks/processes](40-library/20-playbooks/processes/) |"
+    ) in content
+    assert (
+        "| Knowledge | guide | 1 | "
+        "[40-library/30-knowledge/guides](40-library/30-knowledge/guides/) |"
+    ) in content
+    assert "system:erp" not in content

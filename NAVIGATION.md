@@ -17,6 +17,12 @@ _None._
 
 _None._
 
+## Library
+
+| Function | Type | Current records | Location |
+| --- | --- | ---: | --- |
+| Knowledge | guide | 3 | [40-library/30-knowledge/guides](40-library/30-knowledge/guides/) |
+
 ## Recently completed projects
 
 _None._

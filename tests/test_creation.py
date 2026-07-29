@@ -17,6 +17,20 @@ from workrepo.creation import (
 from workrepo.repository import build_index, check_repository
 
 DOCUMENT_DATE = date(2026, 7, 29)
+LIBRARY_DESTINATIONS = {
+    "system": "40-library/10-catalog/systems/example.md",
+    "role": "40-library/10-catalog/roles/example.md",
+    "organization": "40-library/10-catalog/organizations/example.md",
+    "service": "40-library/10-catalog/services/example.md",
+    "process": "40-library/20-playbooks/processes/example.md",
+    "procedure": "40-library/20-playbooks/procedures/example.md",
+    "control": "40-library/20-playbooks/controls/example.md",
+    "standard": "40-library/20-playbooks/standards/example.md",
+    "concept": "40-library/30-knowledge/concepts/example.md",
+    "guide": "40-library/30-knowledge/guides/example.md",
+    "glossary": "40-library/30-knowledge/glossary/example.md",
+    "resource": "40-library/40-resources/example.md",
+}
 
 
 def test_create_project_from_template(repository: Path) -> None:
@@ -36,6 +50,30 @@ def test_create_project_from_template(repository: Path) -> None:
     assert "id: project:erp-upgrade" in content
     assert "created: 2026-07-29" in content
     assert "# ERP更改" in content
+    assert check_repository(repository) == []
+
+
+@pytest.mark.parametrize(("document_type", "destination"), LIBRARY_DESTINATIONS.items())
+def test_create_library_entity_in_function_and_type_directory(
+    repository: Path,
+    document_type: str,
+    destination: str,
+) -> None:
+    """Library types share templates while retaining precise IDs and locations."""
+    path = create_document(
+        repository,
+        CreateRequest(
+            document_type=document_type,
+            slug="example",
+            title="Example",
+            document_date=DOCUMENT_DATE,
+        ),
+    )
+
+    assert path.relative_to(repository) == Path(destination)
+    source = path.read_text(encoding="utf-8")
+    assert f"type: {document_type}" in source
+    assert f"id: {document_type}:example" in source
     assert check_repository(repository) == []
 
 

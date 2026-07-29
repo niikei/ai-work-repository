@@ -32,6 +32,8 @@ assets/          画像・添付原本またはその説明
 Project内部の階層は自由に増やせますが、Projectを入れ子にしたり、配下で別の`index.md`を
 使ったりしません。`index.md`はProjectダッシュボードだけの予約名です。深くしすぎると人間も
 AIも探索しにくいため、通常は2〜3段を目安にします。
+Projectディレクトリ直下のMarkdownは`index.md`だけにし、補助Markdownは必ず用途別の
+サブディレクトリへ置きます。コードや設定などMarkdown以外のファイルはこの制約の対象外です。
 
 Project一覧を人手で階層化せず、`NAVIGATION.md`または
 `workrepo list --type project --area area:<slug>`で絞り込みます。

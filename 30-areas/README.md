@@ -29,6 +29,8 @@ assets/      画像・添付原本またはその説明
 
 Area本体は必ず`30-areas/<slug>/index.md`へ置きます。Area内部の階層は自由に増やせますが、
 Areaを入れ子にしたり、配下で別の`index.md`を使ったりしません。
+Areaディレクトリ直下のMarkdownは`index.md`だけにし、補助Markdownは必ず用途別の
+サブディレクトリへ置きます。
 
 Areaの`index.md`には現在の状態だけを残し、過去の状態はLogまたは`reviews/`へ記録します。
 関連Projectの手書き一覧は持たず、frontmatterの`related`と生成ナビゲーションを正にします。

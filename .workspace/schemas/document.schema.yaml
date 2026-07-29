@@ -1,4 +1,4 @@
-version: 3
+version: 4
 title_source: first_h1
 inbox_root: 00-inbox
 templates_root: 90-templates
@@ -33,24 +33,64 @@ types:
     values:
       health: [unknown, green, amber, red]
       review_cycle: [weekly, monthly, quarterly, annual]
-  role:
-    root: 40-library/10-roles
-    archive: library/roles
+  system:
+    root: 40-library/10-catalog/systems
+    archive: library/catalog/systems
     statuses: [draft, active, retired]
     optional: []
-  system:
-    root: 40-library/20-systems
-    archive: library/systems
+  role:
+    root: 40-library/10-catalog/roles
+    archive: library/catalog/roles
+    statuses: [draft, active, retired]
+    optional: []
+  organization:
+    root: 40-library/10-catalog/organizations
+    archive: library/catalog/organizations
+    statuses: [draft, active, retired]
+    optional: []
+  service:
+    root: 40-library/10-catalog/services
+    archive: library/catalog/services
     statuses: [draft, active, retired]
     optional: []
   process:
-    root: 40-library/30-processes
-    archive: library/processes
+    root: 40-library/20-playbooks/processes
+    archive: library/playbooks/processes
     statuses: [draft, active, retired]
     optional: []
-  reference:
-    root: 40-library/40-references
-    archive: library/references
+  procedure:
+    root: 40-library/20-playbooks/procedures
+    archive: library/playbooks/procedures
+    statuses: [draft, active, retired]
+    optional: []
+  control:
+    root: 40-library/20-playbooks/controls
+    archive: library/playbooks/controls
+    statuses: [draft, active, retired]
+    optional: []
+  standard:
+    root: 40-library/20-playbooks/standards
+    archive: library/playbooks/standards
+    statuses: [draft, active, retired]
+    optional: []
+  concept:
+    root: 40-library/30-knowledge/concepts
+    archive: library/knowledge/concepts
+    statuses: [draft, active, retired]
+    optional: []
+  guide:
+    root: 40-library/30-knowledge/guides
+    archive: library/knowledge/guides
+    statuses: [draft, active, retired]
+    optional: []
+  glossary:
+    root: 40-library/30-knowledge/glossary
+    archive: library/knowledge/glossary
+    statuses: [draft, active, retired]
+    optional: []
+  resource:
+    root: 40-library/40-resources
+    archive: library/resources
     statuses: [draft, active, retired]
     optional: []
 artifact:

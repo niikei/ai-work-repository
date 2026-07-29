@@ -239,18 +239,24 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--url", help="external resource URL")
-    parser.add_argument("--provider", help="resource provider, such as sharepoint")
-    parser.add_argument("--owner", help="person or team responsible for access")
+    parser.add_argument("--url", help="external-resource Artifact URL")
+    parser.add_argument(
+        "--provider",
+        help="external-resource Artifact provider, such as sharepoint",
+    )
+    parser.add_argument(
+        "--owner",
+        help="person or team responsible for the external-resource Artifact",
+    )
     parser.add_argument(
         "--access",
         choices=("internal", "restricted", "public"),
-        help="resource access classification (default for external resource: internal)",
+        help="external-resource Artifact access (default: internal)",
     )
     parser.add_argument(
         "--last-verified",
         type=_iso_date,
-        help="date the link and access were last verified (default: document date)",
+        help="external-resource verification date (default: document date)",
     )
 
 

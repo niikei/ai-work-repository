@@ -24,10 +24,18 @@ if TYPE_CHECKING:
 ARCHIVABLE_STATUSES = {
     "project": frozenset({"completed", "cancelled"}),
     "area": frozenset({"retired"}),
-    "role": frozenset({"retired"}),
     "system": frozenset({"retired"}),
+    "role": frozenset({"retired"}),
+    "organization": frozenset({"retired"}),
+    "service": frozenset({"retired"}),
     "process": frozenset({"retired"}),
-    "reference": frozenset({"retired"}),
+    "procedure": frozenset({"retired"}),
+    "control": frozenset({"retired"}),
+    "standard": frozenset({"retired"}),
+    "concept": frozenset({"retired"}),
+    "guide": frozenset({"retired"}),
+    "glossary": frozenset({"retired"}),
+    "resource": frozenset({"retired"}),
 }
 IGNORED_DIRECTORIES = frozenset(
     {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".venv"},

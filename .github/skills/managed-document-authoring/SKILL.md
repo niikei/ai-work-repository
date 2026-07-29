@@ -1,13 +1,17 @@
 ---
 name: managed-document-authoring
-description: Create or update validated Markdown work records with canonical metadata and relationships. Use when asked to add or edit a Log, Project, Area, role, system, process, reference, report, analysis, specification, deliverable, or other managed document in this work repository.
+description: Create or update validated Markdown work records with canonical metadata and relationships. Use when asked to add or edit a Log, Project, Area, Catalog entity, Playbook, Knowledge document, Resource, report, analysis, specification, deliverable, or other managed document in this work repository.
 ---
 
 # Managed document authoring
 
 1. Read the repository classification guide, document contract, and nearest owning `index.md`.
 2. Choose the lightest valid representation:
-   - Entity for a stable Project, Area, role, system, process, or reference.
+   - Entity for a stable Project or Area.
+   - Catalog for a durable system, role, organization, or service.
+   - Playbook for a reusable process, procedure, control, or standard.
+   - Knowledge for an explanatory concept, guide, or glossary.
+   - Resource for a durable pointer to an external original.
    - Log for a dated event, meeting, incident, investigation, or decision.
    - Typed artifact for a durable report, analysis, specification, review, control, deliverable, or
      managed external resource.

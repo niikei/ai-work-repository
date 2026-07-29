@@ -13,7 +13,25 @@ from workrepo.models import ContentDocument
 from workrepo.policy import load_policy
 from workrepo.schema import Schema, TypeRule, load_schema
 
-DOCUMENT_TYPES = ("log", "project", "area", "role", "system", "process", "reference")
+CATALOG_TYPES = ("system", "role", "organization", "service")
+PLAYBOOK_TYPES = ("process", "procedure", "control", "standard")
+KNOWLEDGE_TYPES = ("concept", "guide", "glossary")
+RESOURCE_TYPES = ("resource",)
+DOCUMENT_TYPES = (
+    "log",
+    "project",
+    "area",
+    *CATALOG_TYPES,
+    *PLAYBOOK_TYPES,
+    *KNOWLEDGE_TYPES,
+    *RESOURCE_TYPES,
+)
+TEMPLATE_NAMES = {
+    **dict.fromkeys(CATALOG_TYPES, "catalog"),
+    **dict.fromkeys(PLAYBOOK_TYPES, "playbook"),
+    **dict.fromkeys(KNOWLEDGE_TYPES, "knowledge"),
+    **dict.fromkeys(RESOURCE_TYPES, "resource"),
+}
 ARTIFACT_DIRECTORIES = {
     "weekly-report": "reports",
     "report": "reports",
@@ -40,6 +58,7 @@ WINDOWS_RESERVED_NAMES = frozenset(
 )
 H1_PATTERN = re.compile(r"^# .+$", flags=re.MULTILINE)
 ID_PATTERN = re.compile(r"^id: .+$", flags=re.MULTILINE)
+TYPE_PATTERN = re.compile(r"^type: .+$", flags=re.MULTILINE)
 RELATED_PATTERN = re.compile(r"^related: \[\]$", flags=re.MULTILINE)
 
 
@@ -113,7 +132,8 @@ def create_document(
     )
     _ensure_path_available(destination, repository_root)
 
-    template_path = repository_root / schema.templates_root / f"{request.document_type}.md"
+    template_name = TEMPLATE_NAMES.get(request.document_type, request.document_type)
+    template_path = repository_root / schema.templates_root / f"{template_name}.md"
     if request.template_name is not None:
         if request.document_type != "log" or request.template_name not in {
             "log",
@@ -258,6 +278,7 @@ def _render_template(
         else f"{request.document_type}:{request.slug}"
     )
     rendered = template.replace("YYYY-MM-DD", document_date.isoformat())
+    rendered = TYPE_PATTERN.sub(f"type: {request.document_type}", rendered, count=1)
     rendered = ID_PATTERN.sub(f"id: {identifier}", rendered, count=1)
     rendered = H1_PATTERN.sub(f"# {title}", rendered, count=1)
     related_yaml = (

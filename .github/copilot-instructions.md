@@ -22,7 +22,10 @@ files are user-owned records; accuracy and traceability are more important than 
 - Treat Project and Area indexes as concise current-state dashboards. Put events in Log and durable
   detail in typed artifacts instead of growing the index indefinitely.
 - Keep Project and Area entities flat at `<root>/<slug>/index.md`. Supporting content may be nested
-  inside an entity directory, but do not create nested entities or another `index.md`.
+  inside an entity directory, but do not create nested entities or another `index.md`. Do not place
+  another Markdown file beside the Entity `index.md`; use a purpose-specific subdirectory.
+- Classify reusable context by purpose: Catalog for durable subjects, Playbooks for normative
+  methods, Knowledge for explanations, and Resources for durable pointers to external originals.
 - Do not move, delete, archive, restore, or broadly rewrite records without explicit authorization.
   When authorized, use `uv run workrepo archive ID` or `uv run workrepo restore ID`; never move
   managed lifecycle records manually.

@@ -11,6 +11,7 @@ from workrepo.validation import require_repository
 
 NAVIGATION_PATH = Path("NAVIGATION.md")
 INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
+LIBRARY_ROOT = Path("40-library")
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +110,8 @@ def generate_navigation(root: Path, *, state: RepositoryState | None = None) -> 
             "",
             *_area_by_group_section(areas),
             "",
+            *_library_section(repository_state),
+            "",
             *_recently_completed_section(completed_projects),
             "",
         ),
@@ -125,7 +128,7 @@ def display_row(item: ContentDocument) -> str:
     health = str(item.metadata.get("health", "-"))
     identifier = str(item.metadata.get("id", "-"))
     return (
-        f"{document_type:<10} {status:<10} {health:<7} {identifier:<42} {item.title}  [{item.path}]"
+        f"{document_type:<13} {status:<10} {health:<7} {identifier:<42} {item.title}  [{item.path}]"
     )
 
 
@@ -247,6 +250,38 @@ def _recently_completed_section(projects: list[Document]) -> tuple[str, ...]:
     )
     rows = tuple(f"- {_document_link(project)}" for project in ordered[:10])
     return ("## Recently completed projects", "", *(rows or ("_None._",)))
+
+
+def _library_section(state: RepositoryState) -> tuple[str, ...]:
+    counts: dict[str, int] = {}
+    for document in state.documents:
+        document_type = document.metadata.get("type")
+        if not isinstance(document_type, str) or document_type not in state.schema.types:
+            continue
+        rule = state.schema.types[document_type]
+        if (
+            not rule.root.is_relative_to(LIBRARY_ROOT)
+            or document.path.is_relative_to(state.schema.archive_root)
+            or document.metadata.get("status") == "retired"
+        ):
+            continue
+        counts[document_type] = counts.get(document_type, 0) + 1
+    rows = []
+    for document_type, count in sorted(
+        counts.items(),
+        key=lambda item: state.schema.types[item[0]].root.as_posix(),
+    ):
+        root = state.schema.types[document_type].root
+        function = root.relative_to(LIBRARY_ROOT).parts[0].split("-", maxsplit=1)[-1].title()
+        target = quote(f"{root.as_posix()}/", safe="/:@-._~")
+        rows.append(f"| {function} | {document_type} | {count} | [{root}]({target}) |")
+    return (
+        "## Library",
+        "",
+        "| Function | Type | Current records | Location |",
+        "| --- | --- | ---: | --- |",
+        *(rows or ("| _None_ |  |  |  |",)),
+    )
 
 
 def _document_link(document: Document) -> str:

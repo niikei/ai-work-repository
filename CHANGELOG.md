@@ -13,11 +13,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - year-based `80-archive` storage with stable IDs, linked Artifact movement, local-link rewriting,
   generated-view refresh, and rollback on failure;
 - archive-aware list, search, and machine-readable index behavior.
+- schema-backed Catalog, Playbook, Knowledge, and Resource Library taxonomy;
+- structural validation that keeps `index.md` as the only Markdown file directly inside Project and
+  Area Entity directories.
 
 ### Changed
 
 - clarified that Project and Area indexes are concise current-state dashboards.
 - kept Project and Area entities flat while allowing recursively organized supporting artifacts.
+- replaced the ambiguous Reference category with explicit Knowledge and Resource types, and grouped
+  reusable subjects and methods under Catalog and Playbooks.
 
 ## [0.5.0] - 2026-07-29
 

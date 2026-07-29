@@ -13,6 +13,9 @@ applyTo: "{10-log,20-projects,30-areas,40-library}/**/*.md"
 - Replace superseded Project or Area state instead of appending contradictory bullets. Preserve the
   prior state in a Log or review artifact when its history matters.
 - Keep historical events in Logs and current state in Project or Area documents.
+- Keep `index.md` as the only Markdown file directly inside a Project or Area Entity directory.
+- Put reusable subjects in Catalog, normative methods in Playbooks, explanations in Knowledge, and
+  durable pointers to external originals in Resources.
 - Paste ordinary external references directly. Use typed `external-resource` only when an original
   needs durable owner, access, or verification metadata; never copy credentials or tokens.
 - Do not edit generated related-link blocks manually.

@@ -7,16 +7,14 @@ updated: YYYY-MM-DD
 related: []
 ---
 
-# System名
+# Catalog Entity名
 
 ## Purpose
 
+## Ownership
+
 ## Boundary
 
-## Owners
-
-## Integrations
-
-## Constraints
+## Relationships
 
 ## References

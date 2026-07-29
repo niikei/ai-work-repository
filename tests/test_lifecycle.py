@@ -210,19 +210,40 @@ def test_archive_rolls_back_move_and_generated_files_on_failure(
     assert not (repository / "80-archive/2026/projects/finished-project").exists()
 
 
-def test_archive_and_restore_retired_library_entity(repository: Path) -> None:
+@pytest.mark.parametrize(
+    ("document_type", "archive_directory"),
+    [
+        ("system", "library/catalog/systems"),
+        ("role", "library/catalog/roles"),
+        ("organization", "library/catalog/organizations"),
+        ("service", "library/catalog/services"),
+        ("process", "library/playbooks/processes"),
+        ("procedure", "library/playbooks/procedures"),
+        ("control", "library/playbooks/controls"),
+        ("standard", "library/playbooks/standards"),
+        ("concept", "library/knowledge/concepts"),
+        ("guide", "library/knowledge/guides"),
+        ("glossary", "library/knowledge/glossary"),
+        ("resource", "library/resources"),
+    ],
+)
+def test_archive_and_restore_retired_library_entity(
+    repository: Path,
+    document_type: str,
+    archive_directory: str,
+) -> None:
     """Retired reusable knowledge uses its type-specific archive directory."""
-    system = create_document(
+    document = create_document(
         repository,
         CreateRequest(
-            document_type="system",
-            slug="legacy-erp",
-            title="Legacy ERP",
+            document_type=document_type,
+            slug="legacy-record",
+            title="Legacy record",
             document_date=DOCUMENT_DATE,
         ),
     )
-    system.write_text(
-        system.read_text(encoding="utf-8").replace(
+    document.write_text(
+        document.read_text(encoding="utf-8").replace(
             "status: active",
             "status: retired",
         ),
@@ -231,18 +252,18 @@ def test_archive_and_restore_retired_library_entity(repository: Path) -> None:
 
     archive_document(
         repository,
-        "system:legacy-erp",
+        f"{document_type}:legacy-record",
         operation_date=DOCUMENT_DATE,
     )
 
-    archived = repository / "80-archive/2026/library/systems/legacy-erp.md"
+    archived = repository / "80-archive/2026" / archive_directory / "legacy-record.md"
     assert archived.is_file()
-    assert not system.exists()
+    assert not document.exists()
     assert check_repository(repository) == []
 
-    restore_document(repository, "system:legacy-erp")
+    restore_document(repository, f"{document_type}:legacy-record")
 
-    assert system.is_file()
+    assert document.is_file()
     assert not archived.exists()
     assert not (repository / "80-archive/2026").exists()
     assert check_repository(repository) == []

@@ -15,7 +15,7 @@
 | [`10-log/`](10-log/README.md) | 何が起きたか | 日記、会議、障害、判断の記録 |
 | [`20-projects/`](20-projects/README.md) | 終了条件のある変化は何か | 導入、改善、移行、調査 |
 | [`30-areas/`](30-areas/README.md) | 継続的な責任は健全か | ERP運用、アクセス管理 |
-| [`40-library/`](40-library/README.md) | 今後も参照する知識は何か | 役割、システム、手順、資料 |
+| [`40-library/`](40-library/README.md) | 再利用する文脈は何か | 対象、方法、知識、外部原本 |
 
 [Dashboard](DASHBOARD.md)には現在状態を、[Navigation](NAVIGATION.md)にはArea別・group別の
 探索導線を集約します。
@@ -109,8 +109,9 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
 - ProjectとArea本体は`<root>/<slug>/index.md`の一階層に保ちます。内部の成果物は
-  階層化できますが、入れ子のEntityや別の`index.md`は作りません。
-- 非アクティブなProject、Area、Role、System、Process、Referenceは
+  階層化できますが、入れ子のEntityや別の`index.md`は作りません。Entity直下のMarkdownは
+  `index.md`だけにし、補助Markdownはサブディレクトリへ置きます。
+- 非アクティブなProject、Area、Catalog、Playbook、Knowledge、ResourceのEntityは
   `workrepo archive ID`で`80-archive/<year>/`へ移動できます。LogとInboxは対象外です。
 - Archiveは安定ID、配下Artifact、内部リンクを維持し、`workrepo restore ID`で元へ戻せます。
 - ProjectとArea配下のMarkdownは、frontmatterなしなら軽量な作業メモとして索引されます。
@@ -136,8 +137,9 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 「直接貼る → 重要になったら管理対象へ昇格」が標準ワークフローです。
 
 詳しい判断基準は
-[分類ガイド](40-library/40-references/classification-guide.md)と
-[文書契約](40-library/40-references/document-contract.md)を参照してください。
+[分類ガイド](40-library/30-knowledge/guides/classification-guide.md)と
+[文書契約](40-library/30-knowledge/guides/document-contract.md)、
+[ディレクトリ契約](40-library/30-knowledge/guides/directory-contract.md)を参照してください。
 
 ## Obsidian
 

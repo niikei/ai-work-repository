@@ -39,7 +39,7 @@ uv run workrepo refresh
 
 <!-- workrepo:related:start -->
 - [ERP運用](../../30-areas/erp-operations/index.md) (`area:erp-operations`)
-- [ERP](../../40-library/20-systems/erp.md) (`system:erp`)
+- [ERP](../../40-library/10-catalog/systems/erp.md) (`system:erp`)
 <!-- workrepo:related:end -->
 ```
 

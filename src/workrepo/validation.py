@@ -211,6 +211,18 @@ def _validate_index_layout(state: RepositoryState) -> list[Issue]:
                         f"{relative_root.as_posix()}/<slug>/index.md",
                     ),
                 )
+    for document in state.documents:
+        if document.metadata.get("type") not in {"project", "area"}:
+            continue
+        directory = state.root / document.path.parent
+        issues.extend(
+            Issue(
+                sibling.relative_to(state.root),
+                f"Markdown beside {document.path.name} must be moved into a subdirectory",
+            )
+            for sibling in sorted(directory.glob("*.md"))
+            if sibling.name != document.path.name
+        )
     return issues
 
 
@@ -383,9 +395,18 @@ def _validate_location(
     rule: TypeRule,
     schema: Schema,
 ) -> list[Issue]:
-    if document.path.is_relative_to(rule.root):
-        return []
     document_type = document.metadata.get("type")
+    if document.path.is_relative_to(rule.root):
+        if document_type in {"log", "project", "area"}:
+            return []
+        if document.path.parent == rule.root:
+            return []
+        return [
+            Issue(
+                document.path,
+                f"must be located directly under {rule.root}/",
+            ),
+        ]
     if (
         isinstance(document_type, str)
         and rule.archive is not None

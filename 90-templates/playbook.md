@@ -7,7 +7,7 @@ updated: YYYY-MM-DD
 related: []
 ---
 
-# Process名
+# Playbook名
 
 ## Purpose
 
@@ -15,7 +15,7 @@ related: []
 
 ## Inputs
 
-## Procedure
+## Method
 
 ## Exceptions
 

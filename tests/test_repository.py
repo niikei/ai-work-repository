@@ -1,10 +1,12 @@
 """Repository validation and indexing tests."""
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from workrepo.creation import CreateRequest, create_document
 from workrepo.gitops import check_worktree
 from workrepo.repository import (
     INDEX_OUTPUT,
@@ -108,6 +110,44 @@ def test_deep_project_markdown_is_indexed_as_an_artifact(repository: Path) -> No
     artifact = next(item for item in payload["documents"] if item["kind"] == "artifact")
     assert artifact["path"] == "20-projects/example/analysis/architecture/options.md"
     assert artifact["derived"]["parent_id"] == "project:example"
+
+
+def test_check_rejects_markdown_beside_entity_index(repository: Path) -> None:
+    """An Entity directory has one obvious Markdown entry point."""
+    write_document(repository, "20-projects/example/index.md")
+    memo = repository / "20-projects/example/memo.md"
+    memo.write_text("# Memo\n", encoding="utf-8")
+
+    messages = [str(issue) for issue in check_repository(repository)]
+
+    assert messages == [
+        "20-projects/example/memo.md: Markdown beside index.md must be moved into a subdirectory",
+    ]
+
+
+def test_check_rejects_nested_library_entity(repository: Path) -> None:
+    """Library hierarchy stops at function, type, and one document."""
+    system = create_document(
+        repository,
+        CreateRequest(
+            document_type="system",
+            slug="example",
+            title="Example",
+            document_date=date(2026, 7, 29),
+        ),
+    )
+    nested = system.parent / "sap" / system.name
+    nested.parent.mkdir()
+    system.rename(nested)
+
+    messages = [str(issue) for issue in check_repository(repository)]
+
+    assert messages == [
+        (
+            f"{nested.relative_to(repository)}: "
+            "must be located directly under 40-library/10-catalog/systems/"
+        ),
+    ]
 
 
 def test_check_reports_duplicate_and_missing_related_ids(repository: Path) -> None:
@@ -273,7 +313,8 @@ related: [project:example]
 def test_artifact_frontmatter_cannot_masquerade_as_an_entity(repository: Path) -> None:
     """Any frontmatter below a Project must follow the artifact contract."""
     write_document(repository, "20-projects/example/index.md")
-    report = repository / "20-projects/example/report.md"
+    report = repository / "20-projects/example/reports/report.md"
+    report.parent.mkdir()
     report.write_text(
         "---\ntype: report\n---\n\n# Report\n",
         encoding="utf-8",
@@ -287,7 +328,8 @@ def test_artifact_frontmatter_cannot_masquerade_as_an_entity(repository: Path) -
 def test_artifact_frontmatter_after_blank_line_is_not_ignored(repository: Path) -> None:
     """Misplaced YAML produces a correction instead of becoming lightweight data."""
     write_document(repository, "20-projects/example/index.md")
-    report = repository / "20-projects/example/report.md"
+    report = repository / "20-projects/example/reports/report.md"
+    report.parent.mkdir()
     report.write_text(
         "\n---\ntype: artifact\n---\n\n# Report\n",
         encoding="utf-8",
@@ -302,7 +344,7 @@ def test_schema_version_is_enforced(repository: Path) -> None:
     """An incompatible schema cannot be interpreted with silent defaults."""
     schema_path = repository / ".workspace/schemas/document.schema.yaml"
     schema_path.write_text(
-        schema_path.read_text(encoding="utf-8").replace("version: 3", "version: 99"),
+        schema_path.read_text(encoding="utf-8").replace("version: 4", "version: 99"),
         encoding="utf-8",
     )
 
@@ -453,7 +495,8 @@ def test_direct_external_link_rejects_sensitive_query_parameter(
 def test_check_reports_broken_markdown_link(repository: Path) -> None:
     """Normal relative links are validated with a useful source line."""
     write_document(repository, "20-projects/example/index.md")
-    report = repository / "20-projects/example/report.md"
+    report = repository / "20-projects/example/reports/report.md"
+    report.parent.mkdir()
     report.write_text("# Report\n\n[Missing](missing.md)\n", encoding="utf-8")
 
     issues = check_repository(repository)
@@ -465,7 +508,8 @@ def test_check_reports_broken_markdown_link(repository: Path) -> None:
 def test_check_ignores_links_in_code_blocks(repository: Path) -> None:
     """Documentation examples do not create false-positive broken links."""
     write_document(repository, "20-projects/example/index.md")
-    report = repository / "20-projects/example/report.md"
+    report = repository / "20-projects/example/reports/report.md"
+    report.parent.mkdir()
     report.write_text(
         "# Report\n\n```markdown\n[Example](missing.md)\n```\n",
         encoding="utf-8",

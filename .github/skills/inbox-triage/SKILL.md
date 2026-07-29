@@ -12,7 +12,10 @@ description: Safely review and process dated work-repository Inbox checklists. U
    - Several small calls, messages, or actions from one day → one daily Log.
    - A bounded change with an outcome → Project state or Project artifact.
    - Ongoing responsibility health or next action → Area state.
-   - Reusable role, system, process, or reference knowledge → Library.
+   - A durable subject such as a system, role, organization, or service → Catalog.
+   - A reusable process, procedure, control, or standard → Playbooks.
+   - An explanatory concept, guide, or glossary → Knowledge.
+   - A durable pointer to an external original → Resources.
    - Insufficient context → leave open and state the missing question.
 4. Present the proposed destinations before moving, deleting, or broadly rewriting records.
 5. Update or create the durable destination before marking the source item complete.

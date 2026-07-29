@@ -1,11 +1,11 @@
 ---
-type: reference
-id: reference:document-contract
+type: guide
+id: guide:document-contract
 status: active
 created: 2026-07-29
 updated: 2026-07-29
 related:
-  - reference:classification-guide
+  - guide:classification-guide
 ---
 
 # 文書契約
@@ -23,8 +23,8 @@ ProjectまたはArea配下のMarkdownにfrontmatterを書くと、その文書�
 
 ## Entity
 
-EntityはLog、Project、Area、Role、System、Process、Referenceです。共通して`type`、`id`、
-`status`、`created`、`updated`、`related`を持ちます。
+EntityはLog、Project、Areaと、LibraryのCatalog、Playbook、Knowledge、Resourceに属する
+管理対象です。共通して`type`、`id`、`status`、`created`、`updated`、`related`を持ちます。
 
 ProjectとAreaの`health`は`unknown`、`green`、`amber`、`red`です。Projectの`status`は
 期限のある変化のライフサイクルを示します。Areaの`status`は`active`、`paused`、`retired`で、
@@ -40,6 +40,13 @@ ProjectとAreaのEntityは、それぞれ`20-projects/<slug>/index.md`と
 `30-areas/<slug>/index.md`だけに置きます。Entityを物理的にネストしません。各Entityの
 ディレクトリ内部ではArtifact、コード、添付を用途別に階層化できますが、`index.md`は
 Entityダッシュボードの予約名です。
+Project・Areaディレクトリ直下のMarkdownは`index.md`だけにし、補助Markdownは
+サブディレクトリへ置きます。
+
+Library Entityは種類別ディレクトリ直下の単独Markdownです。任意の階層を作らず、
+CatalogはSystem、Role、Organization、Service、PlaybookはProcess、Procedure、Control、
+Standard、KnowledgeはConcept、Guide、Glossaryへ分類します。外部原本への継続的な案内は
+Resourceです。
 
 ## Archive
 
@@ -49,7 +56,7 @@ Entityダッシュボードの予約名です。
 | Type | Status |
 | --- | --- |
 | Project | `completed`, `cancelled` |
-| Area, Role, System, Process, Reference | `retired` |
+| AreaとすべてのLibrary Entity | `retired` |
 
 LogとInboxはArchive対象ではありません。移動しても`id`、配下Artifact、関連、検索索引は
 維持されます。通常の`workrepo list`はArchiveを除外し、`workrepo search`はArchiveも
@@ -83,9 +90,11 @@ uv run workrepo new artifact 2026-07-27-weekly-report \
 
 外部リンクは通常のMarkdownへ直接貼るのが既定です。複数文書から参照する正式な原本や、
 owner・access・最終確認日の管理が必要になったリンクだけを`external-resource`へ昇格します。
+ProjectまたはArea固有なら配下の`external-resource` Artifact、複数の文脈で共有する原本なら
+Library Resourceを使用します。
 
 ## Related documents
 
 <!-- workrepo:related:start -->
-- [文書の分類ガイド](classification-guide.md) (`reference:classification-guide`)
+- [文書の分類ガイド](classification-guide.md) (`guide:classification-guide`)
 <!-- workrepo:related:end -->
