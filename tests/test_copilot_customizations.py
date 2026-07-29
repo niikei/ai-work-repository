@@ -73,6 +73,11 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
         in normalized
     )
     assert "do not scan `**/*.md` or the full tree" in normalized
+    assert (
+        "Never use `workrepo check`, metadata, or file content from the current worktree "
+        "as evidence that a historical target is valid."
+    ) in normalized
+    assert "If the target snapshot is not validated in isolation, say so." in normalized
     assert "full repository-relative paths as visible text" in normalized
     assert "Do not hide the path behind a basename-only link label." in normalized
     assert (
@@ -89,6 +94,12 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     ) in normalized
     assert (
         "verify its count, statuses, and paths against the original `--name-status` output"
+        in normalized
+    )
+    assert "../inbox-triage/SKILL.md" in source
+    assert "../record-maintenance/SKILL.md" in source
+    assert (
+        "Do not require the same follow-up in a Log and a Project or Area."
         in normalized
     )
 
