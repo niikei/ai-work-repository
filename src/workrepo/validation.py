@@ -567,7 +567,8 @@ def _validate_log_path(document: Document, rule: TypeRule) -> list[Issue]:
         issues.append(
             Issue(
                 document.path,
-                f"log for {log_date.isoformat()} must be located under {expected_parent}/",
+                "log for "
+                f"{log_date.isoformat()} must be located under {expected_parent.as_posix()}/",
             ),
         )
     if document.path.suffix != ".md" or not document.path.name.startswith(expected_prefix):

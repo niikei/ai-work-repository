@@ -37,6 +37,6 @@ def _related_match(source: str, path: Path) -> re.Match[str] | None:
     end_count = source.count(RELATED_END)
     match = RELATED_BLOCK_PATTERN.search(source)
     if start_count != end_count or start_count > 1 or (start_count == 1 and match is None):
-        message = f"{path}: generated related document markers are malformed"
+        message = f"{path.as_posix()}: generated related document markers are malformed"
         raise ValueError(message)
     return match

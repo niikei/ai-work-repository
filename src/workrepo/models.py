@@ -37,7 +37,7 @@ class Issue:
 
     def __str__(self) -> str:
         """Render an issue for command-line output."""
-        return f"{self.path}: {self.message}"
+        return f"{self.path.as_posix()}: {self.message}"
 
 
 @dataclass(frozen=True, slots=True)
