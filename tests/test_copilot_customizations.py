@@ -121,6 +121,33 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     assert metadata["argument-hint"] == "commit, range, --staged, or working tree"
 
 
+def test_inbox_triage_separates_evidence_state_and_unknowns() -> None:
+    """Inbox processing must preserve events without promoting proposals."""
+    source = (
+        PROJECT_ROOT / ".github/skills/inbox-triage/SKILL.md"
+    ).read_text(encoding="utf-8")
+    normalized = " ".join(source.split())
+
+    assert "Find candidates with `uv run workrepo list` or" in normalized
+    assert "Do not glob all `index.md` files or scan whole Project or Area trees." in normalized
+    assert "one item may require both evidence and state synchronization" in normalized
+    assert (
+        "if something happened—a meeting, call, decision, incident, observed metric, "
+        "or proposal—preserve it in a Log."
+    ) in normalized
+    assert "Do not use Project or Area state as a substitute for event evidence." in normalized
+    assert (
+        "Do not update a Playbook merely because changing the standard is still "
+        "an open action or proposal."
+    ) in normalized
+    assert "Treat explicit negatives as facts" in normalized
+    assert "Preserve proposals as proposals" in normalized
+    assert (
+        "evidence destination, state synchronization, durable destination, "
+        "and unresolved questions"
+    ) in normalized
+
+
 def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:
     """Synchronizing Area state is not itself an operational review."""
     source = (
