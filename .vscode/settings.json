@@ -1,4 +1,5 @@
 {
+  "chat.useAgentSkills": true,
   "[markdown]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.rumdl": "explicit"

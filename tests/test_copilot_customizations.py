@@ -62,3 +62,18 @@ def test_prompts_and_agents_have_selection_metadata() -> None:
         metadata = _frontmatter(path)
         assert isinstance(metadata["name"], str)
         assert isinstance(metadata["description"], str)
+
+
+def test_slash_commands_do_not_collide() -> None:
+    """A human-facing prompt and an invocable skill cannot share one command."""
+    prompt_names = {
+        _frontmatter(path)["name"]
+        for path in (PROJECT_ROOT / ".github/prompts").glob("*.prompt.md")
+    }
+    skill_names = {
+        metadata["name"]
+        for path in (PROJECT_ROOT / ".github/skills").glob("*/SKILL.md")
+        if (metadata := _frontmatter(path)).get("user-invocable", True)
+    }
+
+    assert prompt_names.isdisjoint(skill_names)

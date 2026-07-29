@@ -1,6 +1,7 @@
 ---
 name: weekly-review
 description: Perform an evidence-based weekly review of a work repository. Use when asked for a weekly status, weekly report, review of active work, overdue or blocked work, Area health, Project progress, Inbox aging, accomplishments, risks, decisions, or next-week priorities.
+user-invocable: false
 ---
 
 # Weekly review
