@@ -25,6 +25,14 @@ def test_always_on_instructions_stay_concise() -> None:
     assert len(path.read_text(encoding="utf-8").split()) <= MAX_ALWAYS_ON_WORDS
 
 
+def test_always_on_instructions_require_unambiguous_paths() -> None:
+    """Change reports must distinguish same-named entity dashboards."""
+    source = (PROJECT_ROOT / ".github/copilot-instructions.md").read_text(encoding="utf-8")
+
+    assert "full repository-relative path" in source
+    assert "`index.md`" in source
+
+
 def test_agent_skills_have_discoverable_metadata() -> None:
     skills_root = PROJECT_ROOT / ".github/skills"
     skills = sorted(path for path in skills_root.iterdir() if path.is_dir())

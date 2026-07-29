@@ -14,6 +14,8 @@ accuracy and traceability.
 - Never store credentials, tokens, signed URLs, or data that cannot be shared with the configured
   Git or AI. Do not edit external originals unless explicitly requested.
 - Run `uv run workrepo refresh` and `uv run workrepo check` after managed-document changes.
+- Report every touched file by its full repository-relative path; never identify distinct files only
+  as `index.md`.
 - Do not commit or push unless requested.
 
 Load path-specific instructions and Agent Skills only for matching tasks.

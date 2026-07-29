@@ -22,11 +22,13 @@ description: Create or update validated Markdown work records with canonical met
    file when the CLI supports it.
 4. Find relationship candidates with `workrepo list` or `workrepo search`; use only verified IDs and
    represent cross-Area work with multiple relationships.
-5. Keep event history in Logs and current state in Project or Area documents. Replace superseded
-   state; do not append text that contradicts the current state.
+5. Keep event history in Logs and current state in Project or Area documents. Replace only
+   superseded wording; preserve unrelated facts and open actions. Set `updated` when content changes,
+   and change `last_reviewed` only when an Area review actually occurred.
 6. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
    relevant Markdown. Create an `external-resource` only when a shared original needs durable owner,
    access class, or verification metadata.
-7. Review the focused diff, then run `uv run workrepo refresh` and `uv run workrepo check`.
+7. Review the focused diff, then run `uv run workrepo refresh` and `uv run workrepo check`. Report
+   every touched file by its full repository-relative path, including generated and deleted files.
 
 Ask before deleting, moving, archiving, or broadly rewriting user-owned records.
