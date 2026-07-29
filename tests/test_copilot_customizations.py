@@ -37,8 +37,8 @@ def test_always_on_instructions_require_unambiguous_paths() -> None:
     normalized = " ".join(source.split())
 
     assert (
-        "Report every touched file by its full repository-relative path; "
-        "never identify distinct files only as `index.md`."
+        "Report touched files with full repository-relative paths as visible text, "
+        "not basename-only labels or hidden link targets."
     ) in normalized
 
 
@@ -61,12 +61,22 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     ).read_text(encoding="utf-8")
     normalized = " ".join(source.split())
 
+    assert "A lone Git ref identifies the commit itself" in normalized
+    assert "review `REF^1..REF`, never `REF..HEAD`" in normalized
     assert "`git diff-tree --root` only for a root commit" in normalized
     assert "`git show REF:path`" in normalized
     assert "`git status`" in normalized
     assert "Never substitute the current worktree for historical content." in normalized
+    assert (
+        "Do not use workspace-wide search to rediscover paths already listed by Git."
+        in normalized
+    )
     assert "do not scan `**/*.md` or the full tree" in normalized
-    assert "full repository-relative paths" in normalized
+    assert "full repository-relative paths as visible text" in normalized
+    assert "Do not hide the path behind a basename-only link label." in normalized
+
+    metadata = _frontmatter(PROJECT_ROOT / ".github/skills/change-review/SKILL.md")
+    assert metadata["argument-hint"] == "commit, range, --staged, or working tree"
 
 
 def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:

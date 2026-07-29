@@ -164,7 +164,7 @@ VS CodeのCopilot Agent Mode向けに、常時適用するinstructions、パス�
 
 - Chatで`/process-inbox`：Inboxを読み取り、変更前に分類案を提示
 - Chatで`/weekly-review`：期間内の記録を根拠付きで週次レビュー
-- Chatで`/review-change`：Gitの対象スナップショットを変更せずにレビュー
+- Chatで`/change-review REF`：Gitの対象スナップショットを変更せずにレビュー
 - Agent選択で`Work Repository Steward`：複数文書にまたがる整理を安全に支援
 
 常時読み込む`.github/copilot-instructions.md`は安全性と探索方法だけに絞っています。文書規約は
