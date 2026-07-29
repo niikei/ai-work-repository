@@ -5,6 +5,7 @@ from pathlib import Path
 from workrepo.yamlutil import load_yaml
 
 PROJECT_ROOT = Path(__file__).parents[1]
+MAX_ALWAYS_ON_WORDS = 220
 
 
 def _frontmatter(path: Path) -> dict[object, object]:
@@ -16,6 +17,12 @@ def _frontmatter(path: Path) -> dict[object, object]:
     assert isinstance(metadata, dict), f"{path} frontmatter must be a mapping"
     assert "TODO" not in source, f"{path} contains an unfinished placeholder"
     return metadata
+
+
+def test_always_on_instructions_stay_concise() -> None:
+    """Task-specific detail belongs in conditional instructions or skills."""
+    path = PROJECT_ROOT / ".github/copilot-instructions.md"
+    assert len(path.read_text(encoding="utf-8").split()) <= MAX_ALWAYS_ON_WORDS
 
 
 def test_agent_skills_have_discoverable_metadata() -> None:

@@ -5,7 +5,9 @@ description: Create or update validated Markdown work records with canonical met
 
 # Managed document authoring
 
-1. Read the repository classification guide, document contract, and nearest owning `index.md`.
+1. Read the nearest owning `index.md`. Consult only the guide needed for an unresolved question:
+   classification guide for document purpose, directory contract for placement, or document contract
+   for metadata and lifecycle. Do not load all guides by default.
 2. Choose the lightest valid representation:
    - Entity for a stable Project or Area.
    - Catalog for a durable system, role, organization, or service.
@@ -18,16 +20,13 @@ description: Create or update validated Markdown work records with canonical met
    - Frontmatter-free Markdown only for local Project or Area working material.
 3. Use `uv run workrepo new` to generate managed paths, IDs, and metadata. Do not handcraft a managed
    file when the CLI supports it.
-4. Use only existing stable IDs in `related`; represent cross-Area work with multiple relationships.
-5. Keep one H1 as the canonical title and do not add `title` to frontmatter.
-6. Preserve `created` after the first commit. Set `updated` to the real editing date. Preserve
-   uncertainty and do not fabricate business facts.
-7. Keep event history in Logs and current state in Project or Area documents. Replace superseded
+4. Find relationship candidates with `workrepo list` or `workrepo search`; use only verified IDs and
+   represent cross-Area work with multiple relationships.
+5. Keep event history in Logs and current state in Project or Area documents. Replace superseded
    state; do not append text that contradicts the current state.
-8. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
+6. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
    relevant Markdown. Create an `external-resource` only when a shared original needs durable owner,
-   access class, or verification metadata. Never record secrets or signed URLs.
-9. Do not edit generated related-link blocks, `DASHBOARD.md`, or `NAVIGATION.md` directly.
-10. Run `uv run workrepo refresh` and `uv run workrepo check`.
+   access class, or verification metadata.
+7. Review the focused diff, then run `uv run workrepo refresh` and `uv run workrepo check`.
 
 Ask before deleting, moving, archiving, or broadly rewriting user-owned records.
