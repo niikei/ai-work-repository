@@ -7,6 +7,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- reversible `workrepo archive` and `workrepo restore` lifecycle operations;
+- year-based `80-archive` storage with stable IDs, linked Artifact movement, local-link rewriting,
+  generated-view refresh, and rollback on failure;
+- archive-aware list, search, and machine-readable index behavior.
+
+### Changed
+
+- clarified that Project and Area indexes are concise current-state dashboards.
+- kept Project and Area entities flat while allowing recursively organized supporting artifacts.
+
 ## [0.5.0] - 2026-07-29
 
 ### Added

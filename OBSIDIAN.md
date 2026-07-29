@@ -49,6 +49,10 @@ uv run workrepo refresh
 [Dashboard](DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
 ブックマークすると、Inbox、進行中Project、Areaへすぐ移動できます。
 
+完了済みProjectなどを`workrepo archive ID`で移動した場合も、標準Markdownリンクと
+生成関連リンクは新しい相対パスへ更新されます。Obsidianのファイル操作で管理対象を直接
+Archiveへ移動せず、必ずコマンドを使ってください。
+
 ## Gitで共有するもの
 
 `.obsidian/app.json`と`.obsidian/templates.json`だけを共有します。次のような個人状態は

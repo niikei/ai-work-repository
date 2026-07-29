@@ -19,7 +19,13 @@ files are user-owned records; accuracy and traceability are more important than 
   to `external-resource`. Never record credentials, access tokens, or signed URLs.
 - Do not edit `DASHBOARD.md`, `NAVIGATION.md`, or `workrepo:related` blocks directly; run
   `uv run workrepo refresh`.
-- Do not move, delete, archive, or broadly rewrite records without explicit authorization.
+- Treat Project and Area indexes as concise current-state dashboards. Put events in Log and durable
+  detail in typed artifacts instead of growing the index indefinitely.
+- Keep Project and Area entities flat at `<root>/<slug>/index.md`. Supporting content may be nested
+  inside an entity directory, but do not create nested entities or another `index.md`.
+- Do not move, delete, archive, restore, or broadly rewrite records without explicit authorization.
+  When authorized, use `uv run workrepo archive ID` or `uv run workrepo restore ID`; never move
+  managed lifecycle records manually.
 - Do not edit Word, Excel, PDF, or image originals unless explicitly requested.
 - Keep data that cannot be shared with the configured Git or AI physically outside this repository.
 - Run `uv run workrepo refresh` and `uv run workrepo check` after managed-document changes.

@@ -15,7 +15,7 @@ from workrepo.repository import (
 
 PROJECT_ROOT = Path(__file__).parents[1]
 DUPLICATE_DOCUMENT_COUNT = 2
-INDEX_VERSION = 4
+INDEX_VERSION = 5
 
 
 def write_document(
@@ -68,6 +68,46 @@ def test_build_index_contains_canonical_title(repository: Path) -> None:
     assert payload["documents"][0]["kind"] == "entity"
     assert payload["documents"][0]["title"] == "Example"
     assert payload["documents"][0]["metadata"]["created"] == "2026-07-28"
+    assert payload["documents"][0]["derived"]["archived"] is False
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "document_type", "root"),
+    [
+        ("20-projects/group/example/index.md", "project", "20-projects"),
+        ("30-areas/group/example/index.md", "area", "30-areas"),
+    ],
+)
+def test_check_rejects_nested_entity_indexes(
+    repository: Path,
+    relative_path: str,
+    document_type: str,
+    root: str,
+) -> None:
+    """Physical grouping cannot become an ambiguous ownership hierarchy."""
+    nested = repository / relative_path
+    nested.parent.mkdir(parents=True)
+    nested.write_text("# Nested entity\n", encoding="utf-8")
+
+    messages = [str(issue) for issue in check_repository(repository)]
+
+    assert messages == [
+        f"{relative_path}: {document_type} index must be located at {root}/<slug>/index.md",
+    ]
+
+
+def test_deep_project_markdown_is_indexed_as_an_artifact(repository: Path) -> None:
+    """A Project may freely organize its supporting content below its root."""
+    write_document(repository, "20-projects/example/index.md")
+    note = repository / "20-projects/example/analysis/architecture/options.md"
+    note.parent.mkdir(parents=True)
+    note.write_text("# Architecture options\n", encoding="utf-8")
+
+    assert check_repository(repository) == []
+    payload = json.loads(build_index(repository).read_text(encoding="utf-8"))
+    artifact = next(item for item in payload["documents"] if item["kind"] == "artifact")
+    assert artifact["path"] == "20-projects/example/analysis/architecture/options.md"
+    assert artifact["derived"]["parent_id"] == "project:example"
 
 
 def test_check_reports_duplicate_and_missing_related_ids(repository: Path) -> None:

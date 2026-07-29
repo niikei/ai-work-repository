@@ -27,6 +27,7 @@ from workrepo.gitops import (
     hooks_active,
     install_hooks,
 )
+from workrepo.lifecycle import archive_document, restore_document
 from workrepo.navigation import ContentFilter, display_row, list_content, search_content
 from workrepo.repository import (
     build_index,
@@ -67,6 +68,8 @@ def _dispatch(
         return _run_new_command(root, args)
     if args.command == "capture":
         return _run_capture(root, args.text, capture_date=args.date)
+    if args.command in {"archive", "restore"}:
+        return _run_lifecycle(root, args)
     if args.command in {"list", "search"}:
         return _run_browse(root, args)
     return _dispatch_auxiliary(parser, args, root)
@@ -178,6 +181,21 @@ def _build_parser() -> argparse.ArgumentParser:
         type=_iso_date,
         help="capture date in YYYY-MM-DD format (default: today)",
     )
+    archive_parser = subparsers.add_parser(
+        "archive",
+        help="move an inactive durable record into the year-based archive",
+    )
+    archive_parser.add_argument("document_id", metavar="ID", help="stable document ID")
+    archive_parser.add_argument(
+        "--date",
+        type=_iso_date,
+        help="archive operation date in YYYY-MM-DD format (default: today)",
+    )
+    restore_parser = subparsers.add_parser(
+        "restore",
+        help="move an archived durable record back to its active type root",
+    )
+    restore_parser.add_argument("document_id", metavar="ID", help="stable document ID")
     subparsers.add_parser(
         "dashboard",
         help="generate the human-readable current-state dashboard",
@@ -244,12 +262,44 @@ def _add_browse_commands(
         help="list repository content with explicit filters",
     )
     _add_content_filters(list_parser)
+    list_archive = list_parser.add_mutually_exclusive_group()
+    list_archive.add_argument(
+        "--include-archived",
+        dest="archive_scope",
+        action="store_const",
+        const="include",
+        default="exclude",
+        help="include archived records (default: active locations only)",
+    )
+    list_archive.add_argument(
+        "--archived-only",
+        dest="archive_scope",
+        action="store_const",
+        const="only",
+        help="show only archived records",
+    )
     search_parser = subparsers.add_parser(
         "search",
         help="search titles, IDs, metadata, and Markdown text",
     )
     search_parser.add_argument("query", help="one or more words; every word must match")
     _add_content_filters(search_parser)
+    search_archive = search_parser.add_mutually_exclusive_group()
+    search_archive.add_argument(
+        "--active-only",
+        dest="archive_scope",
+        action="store_const",
+        const="exclude",
+        default="include",
+        help="exclude archived records (default: search all)",
+    )
+    search_archive.add_argument(
+        "--archived-only",
+        dest="archive_scope",
+        action="store_const",
+        const="only",
+        help="search only archived records",
+    )
 
 
 def _add_content_filters(parser: argparse.ArgumentParser) -> None:
@@ -423,6 +473,41 @@ def _run_capture(root: Path, text: str, *, capture_date: date | None) -> int:
     return 0
 
 
+def _run_archive(
+    root: Path,
+    document_id: str,
+    *,
+    operation_date: date | None,
+) -> int:
+    try:
+        result = archive_document(
+            root,
+            document_id,
+            operation_date=operation_date,
+        )
+    except COMMAND_ERRORS as error:
+        print(f"ERROR {error}")
+        return 1
+    print(f"Archived {result.document_id}: {result.source} -> {result.destination}.")
+    return 0
+
+
+def _run_restore(root: Path, document_id: str) -> int:
+    try:
+        result = restore_document(root, document_id)
+    except COMMAND_ERRORS as error:
+        print(f"ERROR {error}")
+        return 1
+    print(f"Restored {result.document_id}: {result.source} -> {result.destination}.")
+    return 0
+
+
+def _run_lifecycle(root: Path, args: argparse.Namespace) -> int:
+    if args.command == "archive":
+        return _run_archive(root, args.document_id, operation_date=args.date)
+    return _run_restore(root, args.document_id)
+
+
 def _run_dashboard(root: Path) -> int:
     try:
         path = generate_dashboard(root)
@@ -458,6 +543,7 @@ def _run_browse(root: Path, args: argparse.Namespace) -> int:
             health=args.health,
             area_id=args.area_id,
             group=args.group,
+            archive_scope=args.archive_scope,
         )
         items = (
             search_content(state, args.query, filters=filters, limit=args.limit)

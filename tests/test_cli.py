@@ -172,3 +172,79 @@ Cutover planning.
     assert main(("--root", str(repository), "search", "cutover")) == 0
     search_output = capsys.readouterr().out
     assert "ERP Upgrade" in search_output
+
+
+def test_cli_archive_restore_and_browse_defaults(
+    repository: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Lists focus on current work while search retains archived knowledge."""
+    project = repository / "20-projects/finished/index.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        """---
+type: project
+id: project:finished
+status: completed
+health: green
+created: 2026-07-29
+updated: 2026-07-29
+related: []
+---
+
+# Finished Project
+""",
+        encoding="utf-8",
+    )
+    root_arguments = ("--root", str(repository))
+
+    assert (
+        main(
+            (
+                *root_arguments,
+                "archive",
+                "project:finished",
+                "--date",
+                "2026-07-29",
+            ),
+        )
+        == 0
+    )
+    archive_output = capsys.readouterr().out
+    assert "80-archive/2026/projects/finished/index.md" in archive_output
+
+    assert main((*root_arguments, "list", "--type", "project")) == 0
+    assert capsys.readouterr().out == "No matching content.\n"
+
+    assert (
+        main(
+            (
+                *root_arguments,
+                "list",
+                "--type",
+                "project",
+                "--archived-only",
+            ),
+        )
+        == 0
+    )
+    assert "Finished Project" in capsys.readouterr().out
+
+    assert main((*root_arguments, "search", "Finished Project")) == 0
+    assert "Finished Project" in capsys.readouterr().out
+
+    assert (
+        main(
+            (
+                *root_arguments,
+                "search",
+                "Finished Project",
+                "--active-only",
+            ),
+        )
+        == 0
+    )
+    assert capsys.readouterr().out == "No matching content.\n"
+
+    assert main((*root_arguments, "restore", "project:finished")) == 0
+    assert "20-projects/finished/index.md" in capsys.readouterr().out

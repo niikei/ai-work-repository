@@ -3,7 +3,7 @@ type: reference
 id: reference:classification-guide
 status: active
 created: 2026-07-28
-updated: 2026-07-28
+updated: 2026-07-29
 related: []
 ---
 
@@ -35,3 +35,7 @@ related: []
 Logには「テストが失敗した」という事実を残します。Projectには、その結果を反映した
 現在の健康状態、リスク、次の行動を記載します。Areaは関連Projectを集約し、責任領域全体が
 健全かを示します。同じ文章を複製せず、安定IDとリンクで関係を表現します。
+
+ProjectとAreaは詳細を集める箱ではなく、現在状態を判断するダッシュボードです。完了した
+Projectや廃止したAreaは状態変更後もすぐには移動せず、月次レビューで履歴を確認してから
+Archiveします。

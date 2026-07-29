@@ -2,6 +2,7 @@ version: 3
 title_source: first_h1
 inbox_root: 00-inbox
 templates_root: 90-templates
+archive_root: 80-archive
 required:
   - type
   - id
@@ -17,6 +18,7 @@ types:
     optional: []
   project:
     root: 20-projects
+    archive: projects
     statuses: [planned, active, blocked, completed, cancelled]
     required: [health]
     optional: []
@@ -24,6 +26,7 @@ types:
       health: [unknown, green, amber, red]
   area:
     root: 30-areas
+    archive: areas
     statuses: [active, paused, retired]
     required: [health, review_cycle, last_reviewed]
     optional: [group]
@@ -32,18 +35,22 @@ types:
       review_cycle: [weekly, monthly, quarterly, annual]
   role:
     root: 40-library/10-roles
+    archive: library/roles
     statuses: [draft, active, retired]
     optional: []
   system:
     root: 40-library/20-systems
+    archive: library/systems
     statuses: [draft, active, retired]
     optional: []
   process:
     root: 40-library/30-processes
+    archive: library/processes
     statuses: [draft, active, retired]
     optional: []
   reference:
     root: 40-library/40-references
+    archive: library/references
     statuses: [draft, active, retired]
     optional: []
 artifact:

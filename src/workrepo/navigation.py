@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 from urllib.parse import quote
 
 from workrepo.models import ContentDocument, Document
@@ -21,6 +22,7 @@ class ContentFilter:
     health: str | None = None
     area_id: str | None = None
     group: str | None = None
+    archive_scope: Literal["exclude", "include", "only"] = "exclude"
 
 
 def list_content(
@@ -32,7 +34,15 @@ def list_content(
     """Return deterministically ordered content matching explicit filters."""
     effective_filters = filters or ContentFilter()
     content: list[ContentDocument] = [*state.documents, *state.artifacts]
-    matched = [item for item in content if _matches(item, effective_filters)]
+    matched = [
+        item
+        for item in content
+        if _matches(
+            item,
+            effective_filters,
+            archive_root=state.schema.archive_root,
+        )
+    ]
     return sorted(matched, key=_sort_key)[:limit]
 
 
@@ -119,17 +129,26 @@ def display_row(item: ContentDocument) -> str:
     )
 
 
-def _matches(item: ContentDocument, filters: ContentFilter) -> bool:
+def _matches(
+    item: ContentDocument,
+    filters: ContentFilter,
+    *,
+    archive_root: Path,
+) -> bool:
     metadata = item.metadata
-    if filters.document_type is not None and metadata.get("type") != filters.document_type:
-        return False
-    if filters.status is not None and metadata.get("status") != filters.status:
-        return False
-    if filters.health is not None and metadata.get("health") != filters.health:
-        return False
-    if filters.group is not None and metadata.get("group") != filters.group:
-        return False
-    return filters.area_id is None or filters.area_id in _related_values(item)
+    archived = item.path.is_relative_to(archive_root)
+    archive_matches = not (
+        (filters.archive_scope == "exclude" and archived)
+        or (filters.archive_scope == "only" and not archived)
+    )
+    return (
+        archive_matches
+        and (filters.document_type is None or metadata.get("type") == filters.document_type)
+        and (filters.status is None or metadata.get("status") == filters.status)
+        and (filters.health is None or metadata.get("health") == filters.health)
+        and (filters.group is None or metadata.get("group") == filters.group)
+        and (filters.area_id is None or filters.area_id in _related_values(item))
+    )
 
 
 def _related_values(item: ContentDocument) -> tuple[str, ...]:

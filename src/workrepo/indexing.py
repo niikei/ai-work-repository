@@ -25,11 +25,28 @@ def build_index(root: Path, *, state: RepositoryState | None = None) -> Path:
     backlinks = _backlinks([*documents, *artifacts])
     today = current_date(repository_state.policy.timezone)
     entries = [
-        *(_entity_entry(repository_root, document, backlinks, today) for document in documents),
-        *(_artifact_entry(repository_root, artifact, backlinks) for artifact in artifacts),
+        *(
+            _entity_entry(
+                repository_root,
+                document,
+                backlinks,
+                today,
+                repository_state.schema.archive_root,
+            )
+            for document in documents
+        ),
+        *(
+            _artifact_entry(
+                repository_root,
+                artifact,
+                backlinks,
+                repository_state.schema.archive_root,
+            )
+            for artifact in artifacts
+        ),
     ]
     payload = {
-        "version": 4,
+        "version": 5,
         "documents": sorted(entries, key=lambda item: str(item["path"])),
     }
     output = repository_root / INDEX_OUTPUT
@@ -46,6 +63,7 @@ def _entity_entry(
     document: Document,
     backlinks: dict[str, list[str]],
     today: date,
+    archive_root: Path,
 ) -> dict[str, object]:
     metadata = {key: _json_value(value) for key, value in sorted(document.metadata.items())}
     return {
@@ -56,6 +74,7 @@ def _entity_entry(
         "path": document.path.as_posix(),
         "metadata": metadata,
         "derived": {
+            "archived": document.path.is_relative_to(archive_root),
             **_derived_values(document, today),
             "backlinks": backlinks.get(str(metadata["id"]), []),
             "external_links": _external_links(root, document),
@@ -67,6 +86,7 @@ def _artifact_entry(
     root: Path,
     artifact: Artifact,
     backlinks: dict[str, list[str]],
+    archive_root: Path,
 ) -> dict[str, object]:
     metadata = {key: _json_value(value) for key, value in sorted(artifact.metadata.items())}
     artifact_id = metadata.get("id")
@@ -78,6 +98,7 @@ def _artifact_entry(
         "path": artifact.path.as_posix(),
         "metadata": metadata,
         "derived": {
+            "archived": artifact.path.is_relative_to(archive_root),
             "parent_id": artifact.parent_id,
             "backlinks": backlinks.get(str(artifact_id), []) if artifact_id is not None else [],
             "external_links": _external_links(root, artifact),

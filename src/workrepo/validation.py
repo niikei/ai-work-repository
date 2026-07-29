@@ -37,6 +37,8 @@ EXTERNAL_RESOURCE_FIELDS = frozenset(
     {"provider", "url", "owner", "access", "last_verified"},
 )
 EXTERNAL_ACCESS_VALUES = frozenset({"internal", "restricted", "public"})
+ARCHIVE_YEAR_LENGTH = 4
+INDEX_DOCUMENT_REMAINDER_PARTS = 2
 SENSITIVE_QUERY_KEYS = frozenset(
     {
         "access_token",
@@ -71,7 +73,9 @@ def inspect_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
         ),
     )
     issues.extend(_validate_markdown_links(state.root))
+    issues.extend(_validate_index_layout(state))
     issues.extend(_validate_repository_files(state))
+    issues.extend(_validate_archive_layout(state))
     issues.extend(inbox_report(state).errors)
     return state, sorted(issues)
 
@@ -190,6 +194,41 @@ def _validate_repository_files(state: RepositoryState) -> list[Issue]:
     return issues
 
 
+def _validate_index_layout(state: RepositoryState) -> list[Issue]:
+    issues: list[Issue] = []
+    for document_type in ("project", "area"):
+        relative_root = state.schema.types[document_type].root
+        root = state.root / relative_root
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("index.md")):
+            remainder = path.relative_to(root)
+            if len(remainder.parts) != INDEX_DOCUMENT_REMAINDER_PARTS:
+                issues.append(
+                    Issue(
+                        path.relative_to(state.root),
+                        f"{document_type} index must be located at "
+                        f"{relative_root.as_posix()}/<slug>/index.md",
+                    ),
+                )
+    return issues
+
+
+def _validate_archive_layout(state: RepositoryState) -> list[Issue]:
+    archive = state.root / state.schema.archive_root
+    if not archive.is_dir():
+        return []
+    known = {
+        *(document.path for document in state.documents),
+        *(artifact.path for artifact in state.artifacts),
+    }
+    return [
+        Issue(relative, "document is not in a schema-defined archive location")
+        for path in sorted(archive.rglob("*.md"))
+        if path.name != "README.md" and (relative := path.relative_to(state.root)) not in known
+    ]
+
+
 def _validate_portable_path(path: Path, max_length: int) -> list[Issue]:
     issues: list[Issue] = []
     if len(path.as_posix()) > max_length:
@@ -272,7 +311,7 @@ def _validate_document(
         Issue(document.path, f"missing required field: {field}")
         for field in sorted(required - metadata.keys())
     ]
-    issues.extend(_validate_location(document, rule))
+    issues.extend(_validate_location(document, rule, schema))
     issues.extend(_validate_id(document, document_type))
     issues.extend(_validate_status(document, rule))
     issues.extend(_validate_allowed_values(document, rule))
@@ -339,10 +378,31 @@ def _validate_artifact(
     return issues
 
 
-def _validate_location(document: Document, rule: TypeRule) -> list[Issue]:
+def _validate_location(
+    document: Document,
+    rule: TypeRule,
+    schema: Schema,
+) -> list[Issue]:
     if document.path.is_relative_to(rule.root):
         return []
-    return [Issue(document.path, f"must be located under {rule.root}/")]
+    document_type = document.metadata.get("type")
+    if (
+        isinstance(document_type, str)
+        and rule.archive is not None
+        and _is_archive_location(
+            document.path,
+            schema.archive_root,
+            rule.archive,
+            indexed=document_type in {"project", "area"},
+        )
+    ):
+        return []
+    return [
+        Issue(
+            document.path,
+            f"must be located under {rule.root}/ or {schema.archive_root}/",
+        ),
+    ]
 
 
 def _validate_id(document: ContentDocument, document_type: str) -> list[Issue]:
@@ -359,8 +419,52 @@ def _validate_id(document: ContentDocument, document_type: str) -> list[Issue]:
 def _validate_artifact_location(artifact: Artifact, schema: Schema) -> list[Issue]:
     if any(artifact.path.is_relative_to(root) for root in schema.artifact.roots):
         return []
+    if _has_archive_year(artifact.path, schema.archive_root):
+        return []
     roots = ", ".join(f"{root}/" for root in schema.artifact.roots)
-    return [Issue(artifact.path, f"artifact must be located under one of: {roots}")]
+    return [
+        Issue(
+            artifact.path,
+            f"artifact must be located under one of: {roots}, {schema.archive_root}/",
+        ),
+    ]
+
+
+def _is_archive_location(
+    path: Path,
+    archive_root: Path,
+    archive_directory: Path,
+    *,
+    indexed: bool,
+) -> bool:
+    try:
+        relative = path.relative_to(archive_root)
+    except ValueError:
+        return False
+    prefix_size = 1 + len(archive_directory.parts)
+    if len(relative.parts) <= prefix_size:
+        return False
+    year = relative.parts[0]
+    if len(year) != ARCHIVE_YEAR_LENGTH or not year.isdigit():
+        return False
+    if relative.parts[1:prefix_size] != archive_directory.parts:
+        return False
+    remainder = relative.parts[prefix_size:]
+    if indexed:
+        return len(remainder) == INDEX_DOCUMENT_REMAINDER_PARTS and remainder[-1] == "index.md"
+    return len(remainder) == 1 and remainder[0].endswith(".md")
+
+
+def _has_archive_year(path: Path, archive_root: Path) -> bool:
+    try:
+        relative = path.relative_to(archive_root)
+    except ValueError:
+        return False
+    return bool(
+        relative.parts
+        and len(relative.parts[0]) == ARCHIVE_YEAR_LENGTH
+        and relative.parts[0].isdigit()
+    )
 
 
 def _validate_status(document: Document, rule: TypeRule) -> list[Issue]:

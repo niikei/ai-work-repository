@@ -16,7 +16,7 @@ def discover_documents(root: Path, schema: Schema) -> tuple[list[Document], list
     paths = {
         path
         for document_type, rule in schema.types.items()
-        for pattern in (_content_pattern(document_type, rule),)
+        for pattern in _content_patterns(document_type, rule, schema)
         for path in root.glob(pattern)
         if path.name != README_NAME
     }
@@ -40,7 +40,8 @@ def discover_artifacts(
     paths = {
         path
         for document_type in INDEX_DOCUMENT_TYPES
-        for path in root.glob(f"{schema.types[document_type].root.as_posix()}/**/*.md")
+        for pattern in _artifact_patterns(schema.types[document_type], schema)
+        for path in root.glob(pattern)
         if path.name not in {README_NAME, "index.md"}
         and path.relative_to(root) not in managed_paths
     }
@@ -112,6 +113,23 @@ def _parent_identifier(path: Path, documents: list[Document]) -> str | None:
     return value if isinstance(value, str) else None
 
 
-def _content_pattern(document_type: str, rule: TypeRule) -> str:
-    suffix = "*/index.md" if document_type in INDEX_DOCUMENT_TYPES else "**/*.md"
-    return f"{rule.root.as_posix()}/{suffix}"
+def _content_patterns(
+    document_type: str,
+    rule: TypeRule,
+    schema: Schema,
+) -> tuple[str, ...]:
+    active_suffix = "*/index.md" if document_type in INDEX_DOCUMENT_TYPES else "**/*.md"
+    active = f"{rule.root.as_posix()}/{active_suffix}"
+    if rule.archive is None:
+        return (active,)
+    archive_suffix = "*/index.md" if document_type in INDEX_DOCUMENT_TYPES else "*.md"
+    archived = f"{schema.archive_root.as_posix()}/*/{rule.archive.as_posix()}/{archive_suffix}"
+    return active, archived
+
+
+def _artifact_patterns(rule: TypeRule, schema: Schema) -> tuple[str, ...]:
+    active = f"{rule.root.as_posix()}/**/*.md"
+    if rule.archive is None:
+        return (active,)
+    archived = f"{schema.archive_root.as_posix()}/*/{rule.archive.as_posix()}/**/*.md"
+    return active, archived

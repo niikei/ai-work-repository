@@ -7,7 +7,7 @@
 変更履歴は[CHANGELOG.md](CHANGELOG.md)、貢献方法は[CONTRIBUTING.md](CONTRIBUTING.md)、
 脆弱性の報告方法は[SECURITY.md](SECURITY.md)を参照してください。
 
-## 5つの入口
+## 5つの作業入口とArchive
 
 | 場所 | 判断基準 | 例 |
 | --- | --- | --- |
@@ -21,7 +21,12 @@
 探索導線を集約します。
 
 `inbox`は文書の種類ではなく一時的な状態です。定期的に整理し、残し続けません。
-完了したProjectなどは移動せず、`status`を変更します。これによりリンク切れを防ぎます。
+完了・中止・廃止した記録は、まず`status`を変更します。月次レビューなどで現在の作業場所から
+外すときだけ、専用コマンドで[`80-archive/`](80-archive/README.md)へ安全に移動します。
+
+ProjectとAreaの`index.md`は、詳細文書の置き場ではなく局所的な現在状態ダッシュボードです。
+ProjectはOutcome、Current state、Next actions、Risksを、AreaはResponsibility、Health、
+Signals、Concernsを短く保ちます。出来事はLog、仕様・分析・報告は配下Artifactへ分けます。
 
 ## 基本ワークフロー
 
@@ -32,6 +37,7 @@
 5. `uv run workrepo inbox review`で古い未整理項目を確認する。
 6. `uv run workrepo check`で構造とリンクを検証する。
 7. レビュー前に`uv run workrepo refresh`でリンク、AI向け索引、Dashboardを更新する。
+8. 月次レビューで非アクティブな記録だけを明示的にArchiveする。
 
 ## 日常コマンド
 
@@ -77,6 +83,15 @@ uv run workrepo refresh
 uv run workrepo list --type project --status active
 uv run workrepo list --type project --area area:erp-operations
 uv run workrepo search "cutover decision" --type artifact
+
+# 完了済みProjectを月次レビューでArchiveし、必要なら戻す
+uv run workrepo archive project:erp-upgrade
+uv run workrepo restore project:erp-upgrade
+
+# 通常一覧はArchiveを除外し、検索はArchiveも含む
+uv run workrepo list --type project --include-archived
+uv run workrepo list --type project --archived-only
+uv run workrepo search "cutover decision" --archived-only
 ```
 
 `new`は日付、ID、保存先、frontmatterをテンプレートから生成し、存在しない関連IDや
@@ -93,6 +108,11 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - Entityと正式な成果物には、テンプレートに沿ったYAML frontmatterを付けます。
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
+- ProjectとArea本体は`<root>/<slug>/index.md`の一階層に保ちます。内部の成果物は
+  階層化できますが、入れ子のEntityや別の`index.md`は作りません。
+- 非アクティブなProject、Area、Role、System、Process、Referenceは
+  `workrepo archive ID`で`80-archive/<year>/`へ移動できます。LogとInboxは対象外です。
+- Archiveは安定ID、配下Artifact、内部リンクを維持し、`workrepo restore ID`で元へ戻せます。
 - ProjectとArea配下のMarkdownは、frontmatterなしなら軽量な作業メモとして索引されます。
   frontmatterを付けた場合はTyped Artifactとして厳密に検証され、安定IDを持ちます。
 - `id`は`project:erp-upgrade`のような種類付きの安定IDにします。

@@ -16,6 +16,7 @@ class TypeRule:
     """Placement and field rules for one document type."""
 
     root: Path
+    archive: Path | None
     statuses: frozenset[str]
     required: frozenset[str]
     optional: frozenset[str]
@@ -39,6 +40,7 @@ class Schema:
 
     inbox_root: Path
     templates_root: Path
+    archive_root: Path
     required: frozenset[str]
     types: dict[str, TypeRule]
     artifact: ArtifactRule
@@ -58,6 +60,7 @@ def load_schema(root: Path) -> Schema:
         raise ValueError(message)
     inbox_root = _path(schema_mapping.get("inbox_root"), label="inbox_root")
     templates_root = _path(schema_mapping.get("templates_root"), label="templates_root")
+    archive_root = _path(schema_mapping.get("archive_root"), label="archive_root")
     required = frozenset(_string_list(schema_mapping.get("required"), label="required"))
     raw_types = _mapping(schema_mapping.get("types"), label="types")
     type_rules = {
@@ -72,6 +75,7 @@ def load_schema(root: Path) -> Schema:
     return Schema(
         inbox_root=inbox_root,
         templates_root=templates_root,
+        archive_root=archive_root,
         required=required,
         types=type_rules,
         artifact=artifact,
@@ -84,6 +88,12 @@ def _load_type_rule(name: str, raw: object) -> TypeRule:
     if not isinstance(root, str) or not root:
         message = f"type {name} must define a non-empty root"
         raise ValueError(message)
+    archive_raw = mapping.get("archive")
+    archive = (
+        None
+        if archive_raw is None
+        else _safe_path(_text(archive_raw, label=f"{name}.archive"), label=f"{name}.archive")
+    )
     statuses = frozenset(_string_list(mapping.get("statuses"), label=f"{name}.statuses"))
     required = frozenset(
         _string_list(mapping.get("required", []), label=f"{name}.required"),
@@ -94,6 +104,7 @@ def _load_type_rule(name: str, raw: object) -> TypeRule:
     values = _load_values(mapping.get("values", {}), label=f"{name}.values")
     return TypeRule(
         root=_safe_path(root, label=f"{name}.root"),
+        archive=archive,
         statuses=statuses,
         required=required,
         optional=optional,
@@ -157,6 +168,13 @@ def _path(raw: object, *, label: str) -> Path:
         message = f"{label} must be a non-empty path"
         raise ValueError(message)
     return _safe_path(raw, label=label)
+
+
+def _text(raw: object, *, label: str) -> str:
+    if not isinstance(raw, str) or not raw:
+        message = f"{label} must be a non-empty string"
+        raise ValueError(message)
+    return raw
 
 
 def _safe_path(raw: str, *, label: str) -> Path:
