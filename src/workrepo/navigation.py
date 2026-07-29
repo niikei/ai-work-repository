@@ -222,6 +222,8 @@ def _project_by_area_section(
         )
     if not projects:
         lines.append("_None._")
+    elif lines[-1] == "":
+        lines.pop()
     return tuple(lines)
 
 
@@ -239,6 +241,8 @@ def _area_by_group_section(areas: list[Document]) -> tuple[str, ...]:
         lines.append("")
     if not grouped:
         lines.append("_None._")
+    elif lines[-1] == "":
+        lines.pop()
     return tuple(lines)
 
 
@@ -280,7 +284,7 @@ def _library_section(state: RepositoryState) -> tuple[str, ...]:
         "",
         "| Function | Type | Current records | Location |",
         "| --- | --- | ---: | --- |",
-        *(rows or ("| _None_ |  |  |  |",)),
+        *(rows or ("| _None_ | | | |",)),
     )
 
 

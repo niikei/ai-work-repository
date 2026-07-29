@@ -3,7 +3,7 @@ type: guide
 id: guide:directory-contract
 status: active
 created: 2026-07-29
-updated: 2026-07-29
+updated: 2026-07-30
 related:
   - guide:classification-guide
   - guide:document-contract
@@ -21,10 +21,16 @@ related:
 40-library/   再利用する対象、方法、知識、外部原本への案内
 80-archive/   非アクティブな管理対象
 90-templates/ 管理文書の生成元
+docs/         リポジトリ自体の利用・保守文書
 ```
 
 番号の空きは予約領域ではありません。用途が明確になるまで新しいTop-level directoryを
-追加しません。
+追加しません。`docs/`は業務文書の分類先ではなく、テンプレートの利用ガイド、設計説明、
+検証記録などを業務記録から分離するための保守領域です。
+
+ルート直下のMarkdownは`README.md`、生成される`DASHBOARD.md`と`NAVIGATION.md`、
+公開テンプレートの標準文書`CHANGELOG.md`、`CONTRIBUTING.md`、`SECURITY.md`だけにします。
+その他の利用・設計・検証文書は`docs/`へ置きます。
 
 ## Hierarchy policy
 
@@ -37,6 +43,7 @@ related:
 | Library | 機能、種類、単独Markdownの固定階層 |
 | Archive | 年、種類、Entityの固定階層 |
 | Templates | 少数の共有Templateをフラットに配置 |
+| Docs | 用途別に階層化するが、業務記録を置かない |
 
 Area、Project、System、provider、owner、statusなどの関係や分類を物理階層で表しません。
 安定ID、`related`、metadata、生成Navigationを使用します。

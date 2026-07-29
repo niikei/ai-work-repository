@@ -24,6 +24,7 @@ Before submitting a pull request, run:
 uv run workrepo check --strict
 uv run workrepo refresh
 git diff --exit-code
+uv run rumdl check .
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy

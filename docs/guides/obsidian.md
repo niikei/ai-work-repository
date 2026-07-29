@@ -46,7 +46,7 @@ uv run workrepo refresh
 これらのリンクはObsidianのBacklinksとGraph Viewで認識されます。マーカー内を直接編集しても
 次回の同期で置き換わるため、関係の変更は必ず`related`で行います。
 
-[Dashboard](DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
+[Dashboard](../../DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
 ブックマークすると、Inbox、進行中Project、Areaへすぐ移動できます。
 
 完了済みProjectなどを`workrepo archive ID`で移動した場合も、標準Markdownリンクと

@@ -155,7 +155,7 @@ uv run workrepo refresh
 ```
 
 生成された`workrepo:related`マーカー内は直接編集せず、frontmatterの`related`を変更して
-再実行してください。詳細は[Obsidian利用ガイド](OBSIDIAN.md)にあります。
+再実行してください。詳細は[Obsidian利用ガイド](docs/guides/obsidian.md)にあります。
 
 ## GitHub Copilot
 
@@ -187,18 +187,24 @@ uv run workrepo hooks install
 uv run workrepo doctor
 uv run workrepo check
 uv run workrepo refresh
+uv run rumdl check .
 uv run pytest
 uv run ruff check .
 ```
 
 開発依存関係はuvの既定の`dev`グループなので、通常は`--extra dev`を付けません。
-CIはLinuxとWindowsの両方で、検証、生成物の差分、Ruff、mypy、pytestを確認します。
+CIはLinuxとWindowsの両方で、検証、生成物の差分、rumdl、Ruff、mypy、pytestを確認します。
+
+VS Codeでは推奨拡張`rumdl`をインストールすると、Markdownの問題がエディタ上に表示され、
+明示的な保存時に自動修正されます。リポジトリ全体を手動整形する場合は
+`uv run rumdl fmt .`、変更せず検査する場合は`uv run rumdl check .`を使います。
 
 ## ローカルだけで効く品質ゲート
 
 GitHubやCIを利用できない環境でも、`workrepo hooks install`を各cloneで一度実行すると、
 commit直前に「実際にstagingされた内容」を検査します。作業中ファイルではなくGit indexを
-見るため、commit対象と検査対象がずれません。
+見るため、commit対象と検査対象がずれません。Markdown lintも同じstaged snapshotに対して
+実行され、修正が必要な場合はcommitを止めます。
 
 ```shell
 # 日常の確認

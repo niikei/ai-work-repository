@@ -12,16 +12,16 @@ related: []
 
 ## Events
 
-- 
+-
 
 ## Calls and messages
 
-- 
+-
 
 ## Decisions
 
-- 
+-
 
 ## Follow-up
 
-- [ ] 
+- [ ]

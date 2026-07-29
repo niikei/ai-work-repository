@@ -138,3 +138,22 @@ def test_install_hooks_and_real_commit_reject_invalid_inbox(git_repository: Path
 
     assert result.returncode != 0
     assert "Inbox only allows" in f"{result.stdout}\n{result.stderr}"
+
+
+def test_installed_hook_rejects_markdown_lint_issue(git_repository: Path) -> None:
+    """The hook lints the staged snapshot after structural validation."""
+    install_hooks(git_repository)
+    readme = git_repository / "README.md"
+    readme.write_text("# Repository\n\nTrailing space \n", encoding="utf-8")
+    _git(git_repository, "add", readme.name)
+
+    result = _git(
+        git_repository,
+        "commit",
+        "-m",
+        "Commit malformed Markdown",
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "MD009" in f"{result.stdout}\n{result.stderr}"

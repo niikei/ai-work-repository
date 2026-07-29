@@ -1,0 +1,9 @@
+// Compatibility for the optional markdownlint VS Code extension.
+// rumdl and pyproject.toml remain the canonical Markdown quality gate.
+{
+  "MD013": false,
+  "MD041": false,
+  "MD060": {
+    "style": "compact"
+  }
+}

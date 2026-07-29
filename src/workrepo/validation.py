@@ -33,6 +33,16 @@ IGNORED_MARKDOWN_DIRECTORIES = frozenset(
     },
 )
 GENERATED_MARKDOWN_FILES = frozenset({"DASHBOARD.md", "NAVIGATION.md"})
+ALLOWED_ROOT_MARKDOWN_FILES = frozenset(
+    {
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "DASHBOARD.md",
+        "NAVIGATION.md",
+        "README.md",
+        "SECURITY.md",
+    },
+)
 EXTERNAL_RESOURCE_FIELDS = frozenset(
     {"provider", "url", "owner", "access", "last_verified"},
 )
@@ -73,6 +83,7 @@ def inspect_repository(root: Path) -> tuple[RepositoryState, list[Issue]]:
         ),
     )
     issues.extend(_validate_markdown_links(state.root))
+    issues.extend(_validate_root_markdown(state.root))
     issues.extend(_validate_index_layout(state))
     issues.extend(_validate_repository_files(state))
     issues.extend(_validate_archive_layout(state))
@@ -192,6 +203,14 @@ def _validate_repository_files(state: RepositoryState) -> list[Issue]:
         for path in duplicates
     )
     return issues
+
+
+def _validate_root_markdown(root: Path) -> list[Issue]:
+    return [
+        Issue(path.relative_to(root), "root Markdown must be moved under docs/")
+        for path in sorted(root.glob("*.md"))
+        if path.name not in ALLOWED_ROOT_MARKDOWN_FILES
+    ]
 
 
 def _validate_index_layout(state: RepositoryState) -> list[Issue]:

@@ -1,8 +1,28 @@
 #!/bin/sh
 set -eu
 
+repository_root=$(git rev-parse --show-toplevel)
+
 if command -v uv >/dev/null 2>&1; then
-  exec uv run workrepo check --staged
+  uv run workrepo check --staged
+else
+  workrepo check --staged
 fi
 
-exec workrepo check --staged
+staged_root=$(mktemp -d "${TMPDIR:-/tmp}/workrepo-markdown.XXXXXX")
+trap 'rm -rf "$staged_root"' EXIT HUP INT TERM
+git -C "$repository_root" checkout-index --all --prefix="$staged_root/"
+
+if command -v uv >/dev/null 2>&1; then
+  if [ -f "$repository_root/pyproject.toml" ]; then
+    uv run rumdl check --config "$repository_root/pyproject.toml" "$staged_root"
+  else
+    uv run rumdl check "$staged_root"
+  fi
+elif command -v rumdl >/dev/null 2>&1; then
+  if [ -f "$repository_root/pyproject.toml" ]; then
+    rumdl check --config "$repository_root/pyproject.toml" "$staged_root"
+  else
+    rumdl check "$staged_root"
+  fi
+fi

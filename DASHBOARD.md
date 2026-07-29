@@ -12,10 +12,10 @@ _Inbox is clear._
 
 | Project | Status | Health | Updated |
 | --- | --- | --- | --- |
-| _None_ |  |  |  |
+| _None_ | | | |
 
 ## Areas
 
 | Area | Status | Health | Last reviewed | Next review |
 | --- | --- | --- | --- | --- |
-| _None_ |  |  |  |  |
+| _None_ | | | | |

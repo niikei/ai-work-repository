@@ -18,6 +18,16 @@ from workrepo.repository import (
 PROJECT_ROOT = Path(__file__).parents[1]
 DUPLICATE_DOCUMENT_COUNT = 2
 INDEX_VERSION = 5
+ALLOWED_ROOT_MARKDOWN = frozenset(
+    {
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "DASHBOARD.md",
+        "NAVIGATION.md",
+        "README.md",
+        "SECURITY.md",
+    },
+)
 
 
 def write_document(
@@ -56,6 +66,21 @@ def write_document(
 def test_template_repository_is_valid() -> None:
     """The committed template must satisfy its own rules."""
     assert check_repository(PROJECT_ROOT) == []
+
+
+def test_root_markdown_is_limited_to_repository_entry_points() -> None:
+    """Guides and reports belong under docs instead of accumulating at the root."""
+    root_markdown = {path.name for path in PROJECT_ROOT.glob("*.md")}
+    assert root_markdown <= ALLOWED_ROOT_MARKDOWN
+
+
+def test_check_rejects_unrecognized_root_markdown(repository: Path) -> None:
+    """Daily validation prevents miscellaneous root documents from accumulating."""
+    (repository / "a.md").write_text("# Temporary note\n", encoding="utf-8")
+
+    messages = [str(issue) for issue in check_repository(repository)]
+
+    assert messages == ["a.md: root Markdown must be moved under docs/"]
 
 
 def test_build_index_contains_canonical_title(repository: Path) -> None:

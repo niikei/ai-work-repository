@@ -10,6 +10,15 @@ from workrepo.repository import check_repository, refresh_repository
 DOCUMENT_DATE = date(2026, 7, 29)
 
 
+def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
+    """Generated empty rows agree with the repository's MD060 style."""
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert "| _None_ | | | |" in content
+    assert "| _None_ | | | | |" in content
+    assert "|  |" not in content
+
+
 def test_dashboard_summarizes_inbox_project_and_area(repository: Path) -> None:
     """The generated overview links to canonical state without copying it."""
     create_document(

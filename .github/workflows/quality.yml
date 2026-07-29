@@ -27,6 +27,7 @@ jobs:
       - run: uv run workrepo check
       - run: uv run workrepo refresh
       - run: git diff --exit-code
+      - run: uv run rumdl check .
       - run: uv run ruff check .
       - run: uv run mypy
       - run: uv run pytest

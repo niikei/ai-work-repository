@@ -70,9 +70,10 @@ def _completed_project(repository: Path) -> Path:
             document_date=DOCUMENT_DATE,
         ),
     )
-    notes = repository / "notes.md"
+    notes = repository / "docs/notes.md"
+    notes.parent.mkdir()
     notes.write_text(
-        "# Notes\n\n[Finished Project](20-projects/finished-project/index.md)\n",
+        "# Notes\n\n[Finished Project](../20-projects/finished-project/index.md)\n",
         encoding="utf-8",
     )
     refresh_repository(repository)
@@ -104,8 +105,8 @@ def test_archive_and_restore_project_preserve_links_and_artifacts(
     assert "[Area](../../../../30-areas/erp-operations/index.md)" in (
         archived_project.read_text(encoding="utf-8")
     )
-    assert "[Finished Project](80-archive/2026/projects/finished-project/index.md)" in (
-        repository / "notes.md"
+    assert "[Finished Project](../80-archive/2026/projects/finished-project/index.md)" in (
+        repository / "docs/notes.md"
     ).read_text(encoding="utf-8")
     assert check_repository(repository) == []
 
@@ -151,8 +152,8 @@ def test_archive_and_restore_project_preserve_links_and_artifacts(
     assert "[Area](../../30-areas/erp-operations/index.md)" in project.read_text(
         encoding="utf-8",
     )
-    assert "[Finished Project](20-projects/finished-project/index.md)" in (
-        repository / "notes.md"
+    assert "[Finished Project](../20-projects/finished-project/index.md)" in (
+        repository / "docs/notes.md"
     ).read_text(encoding="utf-8")
     assert not (repository / "80-archive/2026").exists()
     assert check_repository(repository) == []
@@ -187,7 +188,7 @@ def test_archive_rolls_back_move_and_generated_files_on_failure(
 ) -> None:
     """An error after movement restores the exact pre-operation repository."""
     project = _completed_project(repository)
-    notes = repository / "notes.md"
+    notes = repository / "docs/notes.md"
     before_project = project.read_bytes()
     before_notes = notes.read_bytes()
     before_index = (repository / INDEX_OUTPUT).read_bytes()

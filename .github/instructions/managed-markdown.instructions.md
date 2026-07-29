@@ -19,4 +19,4 @@ applyTo: "{10-log,20-projects,30-areas,40-library}/**/*.md"
 - Paste ordinary external references directly. Use typed `external-resource` only when an original
   needs durable owner, access, or verification metadata; never copy credentials or tokens.
 - Do not edit generated related-link blocks manually.
-- Validate with `uv run workrepo refresh` and `uv run workrepo check`.
+- Validate with `uv run workrepo refresh`, `uv run workrepo check`, and `uv run rumdl check .`.

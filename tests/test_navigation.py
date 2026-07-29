@@ -94,6 +94,8 @@ def test_navigation_groups_projects_without_moving_canonical_files(
     assert "[SAP Upgrade](20-projects/sap-upgrade/index.md)" in content
     assert "### No Area assigned" in content
     assert "[Unassigned Project](20-projects/unassigned/index.md)" in content
+    assert "\n\n\n" not in content
+    assert "|  |" not in content
 
 
 def test_navigation_summarizes_library_without_listing_every_record(

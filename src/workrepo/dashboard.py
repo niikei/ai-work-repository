@@ -90,7 +90,7 @@ def _project_section(documents: list[Document]) -> tuple[str, ...]:
         "",
         "| Project | Status | Health | Updated |",
         "| --- | --- | --- | --- |",
-        *(rows or ("| _None_ |  |  |  |",)),
+        *(rows or ("| _None_ | | | |",)),
     )
 
 
@@ -118,7 +118,7 @@ def _area_section(
         "",
         "| Area | Status | Health | Last reviewed | Next review |",
         "| --- | --- | --- | --- | --- |",
-        *(rows or ("| _None_ |  |  |  |  |",)),
+        *(rows or ("| _None_ | | | | |",)),
     )
 
 
