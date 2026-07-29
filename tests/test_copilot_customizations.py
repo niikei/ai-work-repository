@@ -66,6 +66,16 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     assert "`git diff-tree --root` only for a root commit" in normalized
     assert "`git show REF:path`" in normalized
     assert "pipe the historical snapshot through `nl -ba`" in normalized
+    assert "`A`: read the new path from the target snapshot." in normalized
+    assert "`D`: read the deleted path from the parent snapshot." in normalized
+    assert (
+        "`R` or `C`: read the old path from the parent and the new path from the target."
+        in normalized
+    )
+    assert (
+        "Do not claim that facts were preserved or a deletion is safe until every `D` path"
+        in normalized
+    )
     assert "`git status`" in normalized
     assert "Never substitute the current worktree for historical content" in normalized
     assert (

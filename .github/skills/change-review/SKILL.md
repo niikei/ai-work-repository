@@ -17,6 +17,13 @@ argument-hint: "commit, range, --staged, or working tree"
 4. For historical review, inspect the target and parent snapshots with `git show REF:path` and
    `git show REF^1:path`. Never substitute the current worktree for historical content, including
    when collecting line numbers; pipe the historical snapshot through `nl -ba`.
+   Apply the initial name-status list mechanically:
+   - `A`: read the new path from the target snapshot.
+   - `D`: read the deleted path from the parent snapshot.
+   - `M` or type change: read the diff; read both snapshots before making semantic claims.
+   - `R` or `C`: read the old path from the parent and the new path from the target.
+   Do not claim that facts were preserved or a deletion is safe until every `D` path and every
+   renamed or copied source path has been inspected.
 5. Read only changed files and directly relevant records. Do not use workspace-wide search to
    rediscover paths already listed by Git. Use `workrepo list` or `workrepo search` only when current
    repository context is necessary; do not scan `**/*.md` or the full tree. Clearly distinguish
