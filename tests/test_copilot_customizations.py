@@ -65,8 +65,9 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     assert "review `REF^1..REF`, never `REF..HEAD`" in normalized
     assert "`git diff-tree --root` only for a root commit" in normalized
     assert "`git show REF:path`" in normalized
+    assert "pipe the historical snapshot through `nl -ba`" in normalized
     assert "`git status`" in normalized
-    assert "Never substitute the current worktree for historical content." in normalized
+    assert "Never substitute the current worktree for historical content" in normalized
     assert (
         "Do not use workspace-wide search to rediscover paths already listed by Git."
         in normalized
@@ -74,6 +75,22 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     assert "do not scan `**/*.md` or the full tree" in normalized
     assert "full repository-relative paths as visible text" in normalized
     assert "Do not hide the path behind a basename-only link label." in normalized
+    assert (
+        "Area `last_reviewed` records an actual Area review, "
+        "so differing dates are not inherently inconsistent."
+    ) in normalized
+    assert (
+        "A generated file appearing in a commit is not proof of direct editing"
+        in normalized
+    )
+    assert (
+        "Copy every Git status and repository-relative path from the initial change list "
+        "verbatim into a fenced code block."
+    ) in normalized
+    assert (
+        "verify its count, statuses, and paths against the original `--name-status` output"
+        in normalized
+    )
 
     metadata = _frontmatter(PROJECT_ROOT / ".github/skills/change-review/SKILL.md")
     assert metadata["argument-hint"] == "commit, range, --staged, or working tree"

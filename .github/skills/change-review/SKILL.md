@@ -15,17 +15,23 @@ argument-hint: "commit, range, --staged, or working tree"
 3. List the complete change set before opening files. Preserve rename, creation, modification, and
    deletion status. For a working-tree review, include untracked files reported by `git status`.
 4. For historical review, inspect the target and parent snapshots with `git show REF:path` and
-   `git show REF^1:path`. Never substitute the current worktree for historical content.
+   `git show REF^1:path`. Never substitute the current worktree for historical content, including
+   when collecting line numbers; pipe the historical snapshot through `nl -ba`.
 5. Read only changed files and directly relevant records. Do not use workspace-wide search to
    rediscover paths already listed by Git. Use `workrepo list` or `workrepo search` only when current
    repository context is necessary; do not scan `**/*.md` or the full tree. Clearly distinguish
    current context from historical evidence.
 6. Check for lost facts or open actions, contradictory Project or Area state, incorrect `created`,
    `updated`, or `last_reviewed`, unsafe deletion, duplicated external originals, secret exposure,
-   and direct edits to generated files.
+   and stale generated files. `updated` records a content edit; Area `last_reviewed` records an
+   actual Area review, so differing dates are not inherently inconsistent. A generated file appearing
+   in a commit is not proof of direct editing; report it only when the target snapshot does not match
+   canonical source state after regeneration.
 7. Report actionable findings first, ordered by severity, with full repository-relative paths as
    visible text and line references where possible. Do not hide the path behind a basename-only
-   link label. Then list every changed path with its Git status.
+   link label. Copy every Git status and repository-relative path from the initial change list
+   verbatim into a fenced code block. Before answering, verify its count, statuses, and paths against
+   the original `--name-status` output.
 8. Do not modify files, stage changes, commit, or push unless the user separately requests it.
 
 Useful commands:
@@ -35,6 +41,7 @@ git diff --name-status --find-renames REF^1 REF
 git diff --find-renames REF^1 REF -- path/to/file
 git show REF:path/to/file
 git show REF^1:path/to/file
+git show REF:path/to/file | nl -ba
 git diff-tree --root --no-commit-id --name-status -r --find-renames ROOT_REF
 git diff --cached --name-status
 git status --short
