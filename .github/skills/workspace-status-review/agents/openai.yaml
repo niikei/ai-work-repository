@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Status Review"
+  short_description: "Review scoped work state from repository evidence"
+  default_prompt: "Use $workspace-status-review to review the requested period or scope."

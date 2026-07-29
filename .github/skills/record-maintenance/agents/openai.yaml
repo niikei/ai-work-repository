@@ -1,0 +1,4 @@
+interface:
+  display_name: "Record Maintenance"
+  short_description: "Create and update durable work records safely"
+  default_prompt: "Use $record-maintenance to maintain this work record safely."

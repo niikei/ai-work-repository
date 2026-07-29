@@ -5,7 +5,7 @@ argument-hint: "ISO week, date range, or review focus"
 agent: agent
 ---
 
-Use the [Weekly review skill](../skills/weekly-review/SKILL.md) for
+Use the [Workspace status review skill](../skills/workspace-status-review/SKILL.md) for
 `${input:period:the current work week}`.
 
 Start read-only. Produce a concise review with repository-relative evidence for:

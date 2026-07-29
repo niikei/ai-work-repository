@@ -1,0 +1,4 @@
+interface:
+  display_name: "Change Review"
+  short_description: "Review exact Git snapshots for semantic regressions"
+  default_prompt: "Use $change-review to review these Git changes without modifying files."

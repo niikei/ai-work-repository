@@ -1,9 +1,9 @@
 ---
-name: managed-document-authoring
-description: Create or update validated Markdown work records with canonical metadata and relationships. Use when asked to add or edit a Log, Project, Area, Catalog entity, Playbook, Knowledge document, Resource, report, analysis, specification, deliverable, or other managed document in this work repository.
+name: record-maintenance
+description: Create or update durable work records with canonical metadata, relationships, and lifecycle state. Use when asked to maintain a Log, Project, Area, Catalog entity, Playbook, Knowledge document, Resource, report, analysis, specification, deliverable, external-resource, or other managed record in this work repository.
 ---
 
-# Managed document authoring
+# Record maintenance
 
 1. Read the nearest owning `index.md`. Consult only the guide needed for an unresolved question:
    classification guide for document purpose, directory contract for placement, or document contract

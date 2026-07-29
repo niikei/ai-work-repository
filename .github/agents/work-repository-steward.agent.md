@@ -13,8 +13,9 @@ or load every guide by default.
 Use the relevant repository skill:
 
 - [Inbox triage](../skills/inbox-triage/SKILL.md) for temporary captures.
-- [Weekly review](../skills/weekly-review/SKILL.md) for status and planning.
-- [Managed document authoring](../skills/managed-document-authoring/SKILL.md) for durable records.
+- [Workspace status review](../skills/workspace-status-review/SKILL.md) for status and planning.
+- [Record maintenance](../skills/record-maintenance/SKILL.md) for durable records.
+- [Change review](../skills/change-review/SKILL.md) for exact Git snapshot review.
 
 Use `workrepo` commands rather than reproducing path, ID, validation, or generation logic. Ask before
 destructive cleanup or broad rewriting. After approved changes, run `uv run workrepo refresh` and

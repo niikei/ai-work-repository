@@ -6,6 +6,12 @@ from workrepo.yamlutil import load_yaml
 
 PROJECT_ROOT = Path(__file__).parents[1]
 MAX_ALWAYS_ON_WORDS = 220
+EXPECTED_SKILLS = {
+    "change-review",
+    "inbox-triage",
+    "record-maintenance",
+    "workspace-status-review",
+}
 
 
 def _frontmatter(path: Path) -> dict[object, object]:
@@ -40,12 +46,40 @@ def test_agent_skills_have_discoverable_metadata() -> None:
     skills_root = PROJECT_ROOT / ".github/skills"
     skills = sorted(path for path in skills_root.iterdir() if path.is_dir())
 
-    assert skills
+    assert {skill.name for skill in skills} == EXPECTED_SKILLS
     for skill in skills:
         metadata = _frontmatter(skill / "SKILL.md")
         assert metadata["name"] == skill.name
         assert isinstance(metadata["description"], str)
         assert metadata["description"]
+
+
+def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None:
+    """Commit review cannot silently inspect HEAD or scan the whole repository."""
+    source = (
+        PROJECT_ROOT / ".github/skills/change-review/SKILL.md"
+    ).read_text(encoding="utf-8")
+    normalized = " ".join(source.split())
+
+    assert "`git diff-tree --root` only for a root commit" in normalized
+    assert "`git show REF:path`" in normalized
+    assert "`git status`" in normalized
+    assert "Never substitute the current worktree for historical content." in normalized
+    assert "do not scan `**/*.md` or the full tree" in normalized
+    assert "full repository-relative paths" in normalized
+
+
+def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:
+    """Synchronizing Area state is not itself an operational review."""
+    source = (
+        PROJECT_ROOT / ".github/skills/workspace-status-review/SKILL.md"
+    ).read_text(encoding="utf-8")
+    normalized = " ".join(source.split())
+
+    assert (
+        "Change Area `last_reviewed` only when that Area was actually reviewed, "
+        "not merely synchronized."
+    ) in normalized
 
 
 def test_path_instructions_define_application_scope() -> None:
