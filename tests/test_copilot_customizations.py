@@ -28,9 +28,12 @@ def test_always_on_instructions_stay_concise() -> None:
 def test_always_on_instructions_require_unambiguous_paths() -> None:
     """Change reports must distinguish same-named entity dashboards."""
     source = (PROJECT_ROOT / ".github/copilot-instructions.md").read_text(encoding="utf-8")
+    normalized = " ".join(source.split())
 
-    assert "full repository-relative path" in source
-    assert "`index.md`" in source
+    assert (
+        "Report every touched file by its full repository-relative path; "
+        "never identify distinct files only as `index.md`."
+    ) in normalized
 
 
 def test_agent_skills_have_discoverable_metadata() -> None:
