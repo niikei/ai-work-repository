@@ -128,8 +128,14 @@ def test_inbox_triage_separates_evidence_state_and_unknowns() -> None:
     ).read_text(encoding="utf-8")
     normalized = " ".join(source.split())
 
-    assert "Find candidates with `uv run workrepo list` or" in normalized
-    assert "Do not glob all `index.md` files or scan whole Project or Area trees." in normalized
+    assert (
+        '`uv run workrepo search "<distinctive terms>" --type project '
+        "--active-only --limit 5`"
+    ) in normalized
+    assert "Do not use editor search, `rg`, `find`, file globs, or workspace scans." in normalized
+    assert "Do not search Logs for precedents." in normalized
+    assert "inspect at most one primary Project and one Area per item" in normalized
+    assert "A related record is not automatically a destination." in normalized
     assert "one item may require both evidence and state synchronization" in normalized
     assert (
         "if something happened—a meeting, call, decision, incident, observed metric, "
@@ -142,10 +148,11 @@ def test_inbox_triage_separates_evidence_state_and_unknowns() -> None:
     ) in normalized
     assert "Treat explicit negatives as facts" in normalized
     assert "Preserve proposals as proposals" in normalized
-    assert (
-        "evidence destination, state synchronization, durable destination, "
-        "and unresolved questions"
-    ) in normalized
+    assert "`Evidence now`: the dated Log when the item records an event." in normalized
+    assert "`Synchronize now`: canonical Project or Area state" in normalized
+    assert "`Keep open`: whether the Inbox item must remain and why." in normalized
+    assert "Do not list a possible future destination." in normalized
+    assert "it does not update an intake Process or Area." in normalized
 
 
 def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:
