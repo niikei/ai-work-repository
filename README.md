@@ -216,9 +216,15 @@ uv run workrepo inbox review
 # commitされる内容だけを手動確認
 uv run workrepo check --staged
 
+# 過去commitを一時snapshotで検証し、生成物も再現
+uv run workrepo check --ref COMMIT --strict
+
 # 警告も失敗として扱う厳格なレビュー
 uv run workrepo check --strict
 ```
+
+`check --ref`は対象commitをdetached一時worktreeへ展開し、commit日時を基準に構造検証と
+`refresh`の再現性を確認してから削除します。現在のworktreeやstaging内容は変更しません。
 
 次はcommitを拒否します。
 

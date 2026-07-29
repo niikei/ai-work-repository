@@ -9,6 +9,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- isolated `workrepo check --ref` validation for historical Git snapshots, including deterministic
+  generated-view reproduction without modifying the current worktree;
 - reversible `workrepo archive` and `workrepo restore` lifecycle operations;
 - year-based `80-archive` storage with stable IDs, linked Artifact movement, local-link rewriting,
   generated-view refresh, and rollback on failure;

@@ -74,10 +74,14 @@ def test_change_review_uses_historical_snapshots_and_bounded_discovery() -> None
     )
     assert "do not scan `**/*.md` or the full tree" in normalized
     assert (
-        "Never use `workrepo check`, metadata, or file content from the current worktree "
-        "as evidence that a historical target is valid."
+        "`uv run workrepo check --ref REF --strict`, "
+        "which checks and regenerates an isolated snapshot."
     ) in normalized
-    assert "If the target snapshot is not validated in isolation, say so." in normalized
+    assert (
+        "Never run `workrepo refresh` in the current worktree during review"
+        in normalized
+    )
+    assert "If isolated validation fails to run, say so." in normalized
     assert "full repository-relative paths as visible text" in normalized
     assert "Do not hide the path behind a basename-only link label." in normalized
     assert (

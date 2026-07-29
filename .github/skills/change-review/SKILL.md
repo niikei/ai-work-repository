@@ -20,9 +20,10 @@ argument-hint: "commit, range, --staged, or working tree"
 5. Read only changed files and directly relevant records. Do not use workspace-wide search to
    rediscover paths already listed by Git. Use `workrepo list` or `workrepo search` only when current
    repository context is necessary; do not scan `**/*.md` or the full tree. Clearly distinguish
-   current context from historical evidence. Never use `workrepo check`, metadata, or file content
-   from the current worktree as evidence that a historical target is valid. If the target snapshot
-   is not validated in isolation, say so.
+   current context from historical evidence. Validate a historical commit with
+   `uv run workrepo check --ref REF --strict`, which checks and regenerates an isolated snapshot.
+   Never run `workrepo refresh` in the current worktree during review, or use current metadata or file
+   content as evidence that a historical target is valid. If isolated validation fails to run, say so.
 6. Check for lost facts or open actions, contradictory Project or Area state, incorrect `created`,
    `updated`, or `last_reviewed`, unsafe deletion, duplicated external originals, secret exposure,
    and stale generated files. `updated` records a content edit; Area `last_reviewed` records an
@@ -50,6 +51,7 @@ git diff --find-renames REF^1 REF -- path/to/file
 git show REF:path/to/file
 git show REF^1:path/to/file
 git show REF:path/to/file | nl -ba
+uv run workrepo check --ref REF --strict
 git diff-tree --root --no-commit-id --name-status -r --find-renames ROOT_REF
 git diff --cached --name-status
 git status --short

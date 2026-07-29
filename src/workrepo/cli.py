@@ -22,6 +22,7 @@ from workrepo.dashboard import generate_dashboard
 from workrepo.doctor import diagnose
 from workrepo.gitops import (
     CheckReport,
+    check_ref,
     check_staged,
     check_worktree,
     hooks_active,
@@ -91,7 +92,7 @@ def _dispatch_auxiliary(
 
 def _dispatch_maintenance(args: argparse.Namespace, root: Path) -> int:
     if args.command == "check":
-        return _run_check(root, staged=args.staged, strict=args.strict)
+        return _run_check(root, staged=args.staged, ref=args.ref, strict=args.strict)
     if args.command == "index":
         return _run_index(root)
     if args.command == "links":
@@ -121,10 +122,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "check",
         help="validate document structure and metadata",
     )
-    check_parser.add_argument(
+    check_source = check_parser.add_mutually_exclusive_group()
+    check_source.add_argument(
         "--staged",
         action="store_true",
         help="validate the exact Git index snapshot to be committed",
+    )
+    check_source.add_argument(
+        "--ref",
+        metavar="REF",
+        help="validate and regenerate an isolated Git commit snapshot",
     )
     check_parser.add_argument(
         "--strict",
@@ -333,9 +340,20 @@ def _add_content_filters(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _run_check(root: Path, *, staged: bool, strict: bool) -> int:
+def _run_check(
+    root: Path,
+    *,
+    staged: bool,
+    ref: str | None,
+    strict: bool,
+) -> int:
     try:
-        report = check_staged(root) if staged else check_worktree(root)
+        if ref is not None:
+            ref_report = check_ref(root, ref)
+            print(f"Git snapshot: {ref_report.commit}")
+            report = ref_report.report
+        else:
+            report = check_staged(root) if staged else check_worktree(root)
     except COMMAND_ERRORS as error:
         print(f"ERROR {error}")
         return 1

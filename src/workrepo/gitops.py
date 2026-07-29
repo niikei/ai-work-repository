@@ -9,13 +9,15 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
 
-from workrepo.clock import current_date
+from workrepo.clock import current_date, use_date
 from workrepo.generated import remove_related_block
 from workrepo.models import Issue
 from workrepo.policy import load_policy
+from workrepo.repository import refresh_repository
 from workrepo.validation import (
     inspect_repository,
     repository_warnings,
@@ -34,6 +36,14 @@ class CheckReport:
     warnings: tuple[Issue, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class RefCheckReport:
+    """Validation result for one isolated Git commit snapshot."""
+
+    commit: str
+    report: CheckReport
+
+
 def check_worktree(root: Path) -> CheckReport:
     """Check the current working-tree snapshot."""
     state, errors = inspect_repository(root)
@@ -50,6 +60,22 @@ def check_staged(root: Path) -> CheckReport:
     return CheckReport(tuple(sorted(errors)), tuple(sorted(warnings)))
 
 
+def check_ref(root: Path, ref: str) -> RefCheckReport:
+    """Validate and regenerate one Git commit without touching the working tree."""
+    repository_root = root.resolve()
+    commit = _resolve_commit(repository_root, ref)
+    with ref_tree(repository_root, commit) as snapshot:
+        review_date = _commit_date(repository_root, commit, snapshot)
+        with use_date(review_date):
+            state, errors = inspect_repository(snapshot)
+            warnings = repository_warnings(state)
+            if not errors:
+                refresh_repository(snapshot)
+                errors.extend(_generated_drift(snapshot, commit))
+    report = CheckReport(tuple(sorted(errors)), tuple(sorted(warnings)))
+    return RefCheckReport(commit=commit, report=report)
+
+
 @contextmanager
 def staged_tree(root: Path) -> Iterator[Path]:
     """Materialize the Git index in a temporary directory."""
@@ -59,6 +85,23 @@ def staged_tree(root: Path) -> Iterator[Path]:
         prefix = f"{staged_root}{os.sep}"
         _git(root, "checkout-index", "--all", f"--prefix={prefix}")
         yield staged_root
+
+
+@contextmanager
+def ref_tree(root: Path, commit: str) -> Iterator[Path]:
+    """Materialize one detached commit and remove all worktree metadata afterward."""
+    _git(root, "rev-parse", "--git-dir")
+    with tempfile.TemporaryDirectory(prefix="workrepo-ref-") as temporary:
+        snapshot = Path(temporary) / "snapshot"
+        added = False
+        try:
+            _git(root, "worktree", "add", "--quiet", "--detach", str(snapshot), commit)
+            added = True
+            yield snapshot
+        finally:
+            if added:
+                _git(root, "worktree", "remove", "--force", str(snapshot), check=False)
+            _git(root, "worktree", "prune", check=False)
 
 
 def install_hooks(root: Path) -> None:
@@ -80,6 +123,45 @@ def hooks_active(root: Path) -> bool:
 def is_git_repository(root: Path) -> bool:
     """Return whether *root* belongs to a Git working tree."""
     return _git(root, "rev-parse", "--is-inside-work-tree", check=False).returncode == 0
+
+
+def _resolve_commit(root: Path, ref: str) -> str:
+    if not ref.strip():
+        message = "Git ref must not be empty"
+        raise ValueError(message)
+    try:
+        result = _git(
+            root,
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            f"{ref}^{{commit}}",
+        )
+    except ValueError as error:
+        message = f"Git ref does not resolve to a commit: {ref}"
+        raise ValueError(message) from error
+    commit = result.stdout.strip()
+    if not commit:
+        message = f"Git ref did not resolve to a commit: {ref}"
+        raise ValueError(message)
+    return commit
+
+
+def _commit_date(root: Path, commit: str, snapshot: Path) -> date:
+    result = _git(root, "show", "--no-patch", "--format=%cI", commit)
+    timestamp = datetime.fromisoformat(result.stdout.strip())
+    timezone = ZoneInfo(load_policy(snapshot).timezone)
+    return timestamp.astimezone(timezone).date()
+
+
+def _generated_drift(snapshot: Path, commit: str) -> list[Issue]:
+    result = _git(snapshot, "diff", "--name-only", "-z", "--")
+    paths = sorted(Path(value) for value in result.stdout.split("\0") if value)
+    short_commit = commit[:12]
+    return [
+        Issue(path, f"generated content is stale at Git snapshot {short_commit}")
+        for path in paths
+    ]
 
 
 def _updated_date_issues(root: Path) -> list[Issue]:
