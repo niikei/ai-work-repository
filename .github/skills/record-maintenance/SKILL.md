@@ -5,10 +5,11 @@ description: Create or update durable work records with canonical metadata, rela
 
 # Record maintenance
 
-1. Read the nearest owning `index.md`. Consult only the guide needed for an unresolved question:
+1. Record `git status --short` before editing and preserve pre-existing user changes.
+2. Read the nearest owning `index.md`. Consult only the guide needed for an unresolved question:
    classification guide for document purpose, directory contract for placement, or document contract
    for metadata and lifecycle. Do not load all guides by default.
-2. Choose the lightest valid representation:
+3. Choose the lightest valid representation:
    - Entity for a stable Project or Area.
    - Catalog for a durable system, role, organization, or service.
    - Playbook for a reusable process, procedure, control, or standard.
@@ -18,17 +19,24 @@ description: Create or update durable work records with canonical metadata, rela
    - Typed artifact for a durable report, analysis, specification, review, control, deliverable, or
      managed external resource.
    - Frontmatter-free Markdown only for local Project or Area working material.
-3. Use `uv run workrepo new` to generate managed paths, IDs, and metadata. Do not handcraft a managed
+4. Use `uv run workrepo new` to generate managed paths, IDs, and metadata. Do not handcraft a managed
    file when the CLI supports it.
-4. Find relationship candidates with `workrepo list` or `workrepo search`; use only verified IDs and
+5. Find relationship candidates with `workrepo list` or `workrepo search`; use only verified IDs and
    represent cross-Area work with multiple relationships.
-5. Keep event history in Logs and current state in Project or Area documents. Replace only
+6. Keep event history in Logs and current state in Project or Area documents. Replace only
    superseded wording; preserve unrelated facts and open actions. Set `updated` when content changes,
    and change `last_reviewed` only when an Area review actually occurred.
-6. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
+7. Paste ordinary Word, Excel, PowerPoint, SharePoint, and similar references directly into the
    relevant Markdown. Create an `external-resource` only when a shared original needs durable owner,
    access class, or verification metadata.
-7. Review the focused diff, then run `uv run workrepo refresh` and `uv run workrepo check`. Report
-   every touched file by its full repository-relative path, including generated and deleted files.
+8. Review the focused diff, then run `uv run workrepo refresh` and `uv run workrepo check`.
+9. Run `git status --short` after validation. In the final response:
+   - Report only files whose content or Git status actually changed during this task as task-touched.
+   - Show every task-touched path as visible, full repository-relative text; never use a basename-only
+     link label.
+   - Copy the final `git status --short` output verbatim into a fenced code block as the current
+     worktree state, distinguishing any pre-existing changes recorded in step 1.
+   - Do not infer changes from `refresh` output. A regenerated file whose Git status is unchanged is
+     not a changed file.
 
 Ask before deleting, moving, archiving, or broadly rewriting user-owned records.

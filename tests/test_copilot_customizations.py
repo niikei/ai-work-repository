@@ -155,6 +155,32 @@ def test_inbox_triage_separates_evidence_state_and_unknowns() -> None:
     assert "it does not update an intake Process or Area." in normalized
 
 
+def test_record_maintenance_reports_actual_git_changes() -> None:
+    """Maintenance reports must not confuse regeneration with a content change."""
+    source = (
+        PROJECT_ROOT / ".github/skills/record-maintenance/SKILL.md"
+    ).read_text(encoding="utf-8")
+    normalized = " ".join(source.split())
+
+    assert "Record `git status --short` before editing" in normalized
+    assert "Run `git status --short` after validation." in normalized
+    assert (
+        "Report only files whose content or Git status actually changed during this task"
+        in normalized
+    )
+    assert "visible, full repository-relative text" in normalized
+    assert (
+        "Copy the final `git status --short` output verbatim into a fenced code block"
+        in normalized
+    )
+    assert "distinguishing any pre-existing changes recorded in step 1" in normalized
+    assert "Do not infer changes from `refresh` output." in normalized
+    assert (
+        "A regenerated file whose Git status is unchanged is not a changed file."
+        in normalized
+    )
+
+
 def test_status_review_changes_last_reviewed_only_for_real_reviews() -> None:
     """Synchronizing Area state is not itself an operational review."""
     source = (
