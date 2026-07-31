@@ -5,15 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from workrepo.cli_mutations import run_capture, run_lifecycle, run_new_command
 from workrepo.cli_parser import build_parser
-from workrepo.creation import (
-    ArtifactRequest,
-    CreateRequest,
-    ExternalResourceMetadata,
-    capture_inbox,
-    create_artifact,
-    create_document,
-)
 from workrepo.dashboard import generate_dashboard
 from workrepo.doctor import diagnose
 from workrepo.gitops import (
@@ -24,7 +17,6 @@ from workrepo.gitops import (
     hooks_active,
     install_hooks,
 )
-from workrepo.lifecycle import archive_document, restore_document
 from workrepo.navigation import ContentFilter, display_row, list_content, search_content
 from workrepo.repository import (
     build_index,
@@ -38,7 +30,6 @@ from workrepo.validation import inbox_report, require_repository
 if TYPE_CHECKING:
     import argparse
     from collections.abc import Sequence
-    from datetime import date
 
 COMMAND_ERRORS = (OSError, RuntimeError, TypeError, ValueError)
 
@@ -64,11 +55,11 @@ def _dispatch(
     if args.command in {"check", "index", "links", "dashboard", "refresh"}:
         return _dispatch_maintenance(args, root)
     if args.command == "new":
-        return _run_new_command(root, args)
+        return run_new_command(root, args)
     if args.command == "capture":
-        return _run_capture(root, args.text, capture_date=args.date)
+        return run_capture(root, args.text, capture_date=args.date)
     if args.command in {"archive", "restore"}:
-        return _run_lifecycle(root, args)
+        return run_lifecycle(root, args)
     if args.command in {"list", "search", "review-context"}:
         return (
             run_review_context(root, args)
@@ -157,149 +148,6 @@ def _run_links(root: Path) -> int:
         return 1
     print(f"Related links synchronized; {changed} document(s) changed.")
     return 0
-
-
-def _run_new(
-    root: Path,
-    request: CreateRequest,
-) -> int:
-    try:
-        path = create_document(root, request)
-    except COMMAND_ERRORS as error:
-        print(f"ERROR {error}")
-        return 1
-    print(f"Created {path.relative_to(root.resolve())}.")
-    return 0
-
-
-def _run_new_command(root: Path, args: argparse.Namespace) -> int:
-    if args.document_type == "artifact":
-        if args.parent is None or args.kind is None:
-            print("ERROR artifact requires --parent and --kind")
-            return 1
-        if args.template is not None:
-            print("ERROR --template is only valid for log")
-            return 1
-        try:
-            external_resource = _external_resource_metadata(args)
-            path = create_artifact(
-                root,
-                ArtifactRequest(
-                    slug=args.slug,
-                    title=args.title,
-                    parent_id=args.parent,
-                    kind=args.kind,
-                    related=tuple(args.related),
-                    document_date=args.date,
-                    external_resource=external_resource,
-                ),
-            )
-        except COMMAND_ERRORS as error:
-            print(f"ERROR {error}")
-            return 1
-        print(f"Created {path.relative_to(root.resolve())}.")
-        return 0
-    if args.parent is not None or args.kind is not None or _has_external_resource_arguments(args):
-        print("ERROR artifact-only options cannot be used for an entity")
-        return 1
-    return _run_new(
-        root,
-        CreateRequest(
-            document_type=args.document_type,
-            slug=args.slug,
-            title=args.title,
-            related=tuple(args.related),
-            document_date=args.date,
-            template_name=args.template,
-        ),
-    )
-
-
-def _external_resource_metadata(
-    args: argparse.Namespace,
-) -> ExternalResourceMetadata | None:
-    if args.kind != "external-resource":
-        if _has_external_resource_arguments(args):
-            message = "external resource options require --kind external-resource"
-            raise ValueError(message)
-        return None
-    missing = [
-        option
-        for option, value in (
-            ("--url", args.url),
-            ("--provider", args.provider),
-            ("--owner", args.owner),
-        )
-        if value is None
-    ]
-    if missing:
-        message = f"external-resource requires {', '.join(missing)}"
-        raise ValueError(message)
-    return ExternalResourceMetadata(
-        provider=args.provider,
-        url=args.url,
-        owner=args.owner,
-        access=args.access or "internal",
-        last_verified=args.last_verified,
-    )
-
-
-def _has_external_resource_arguments(args: argparse.Namespace) -> bool:
-    return any(
-        value is not None
-        for value in (
-            args.url,
-            args.provider,
-            args.owner,
-            args.access,
-            args.last_verified,
-        )
-    )
-
-
-def _run_capture(root: Path, text: str, *, capture_date: date | None) -> int:
-    try:
-        path = capture_inbox(root, text, capture_date=capture_date)
-    except COMMAND_ERRORS as error:
-        print(f"ERROR {error}")
-        return 1
-    print(f"Captured in {path.relative_to(root.resolve())}.")
-    return 0
-
-
-def _run_archive(
-    root: Path,
-    document_id: str,
-    *,
-    operation_date: date | None,
-) -> int:
-    try:
-        result = archive_document(
-            root,
-            document_id,
-            operation_date=operation_date,
-        )
-    except COMMAND_ERRORS as error:
-        print(f"ERROR {error}")
-        return 1
-    print(f"Archived {result.document_id}: {result.source} -> {result.destination}.")
-    return 0
-
-
-def _run_restore(root: Path, document_id: str) -> int:
-    try:
-        result = restore_document(root, document_id)
-    except COMMAND_ERRORS as error:
-        print(f"ERROR {error}")
-        return 1
-    print(f"Restored {result.document_id}: {result.source} -> {result.destination}.")
-    return 0
-
-
-def _run_lifecycle(root: Path, args: argparse.Namespace) -> int:
-    if args.command == "archive":
-        return _run_archive(root, args.document_id, operation_date=args.date)
-    return _run_restore(root, args.document_id)
 
 
 def _run_dashboard(root: Path) -> int:
