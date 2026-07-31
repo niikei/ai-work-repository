@@ -4,16 +4,14 @@ import re
 from collections import Counter
 from collections.abc import Iterable
 from datetime import date
-from pathlib import Path
 
 from workrepo.calendar import work_week
 from workrepo.external_resource_validation import validate_external_resource
+from workrepo.location_validation import validate_artifact_location, validate_document_location
 from workrepo.models import Artifact, ContentDocument, Document, Issue
 from workrepo.schema import Schema, TypeRule
 
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*:[a-z0-9][a-z0-9:-]*$")
-ARCHIVE_YEAR_LENGTH = 4
-INDEX_DOCUMENT_REMAINDER_PARTS = 2
 
 
 def identifier(document: ContentDocument) -> str | None:
@@ -86,7 +84,7 @@ def _validate_document(
         Issue(document.path, f"missing required field: {field}")
         for field in sorted(required - metadata.keys())
     ]
-    issues.extend(_validate_location(document, rule, schema))
+    issues.extend(validate_document_location(document, rule, schema))
     issues.extend(_validate_id(document, document_type))
     issues.extend(_validate_status(document, rule))
     issues.extend(_validate_allowed_values(document, rule))
@@ -121,7 +119,7 @@ def _validate_artifact(
         Issue(artifact.path, f"missing required field: {field}")
         for field in sorted(required - metadata.keys())
     ]
-    issues.extend(_validate_artifact_location(artifact, schema))
+    issues.extend(validate_artifact_location(artifact, schema))
     issues.extend(_validate_id(artifact, "artifact"))
     issues.extend(
         _validate_enum(
@@ -153,42 +151,6 @@ def _validate_artifact(
     return issues
 
 
-def _validate_location(
-    document: Document,
-    rule: TypeRule,
-    schema: Schema,
-) -> list[Issue]:
-    document_type = document.metadata.get("type")
-    if document.path.is_relative_to(rule.root):
-        if document_type in {"log", "project", "area"}:
-            return []
-        if document.path.parent == rule.root:
-            return []
-        return [
-            Issue(
-                document.path,
-                f"must be located directly under {rule.root}/",
-            ),
-        ]
-    if (
-        isinstance(document_type, str)
-        and rule.archive is not None
-        and _is_archive_location(
-            document.path,
-            schema.archive_root,
-            rule.archive,
-            indexed=document_type in {"project", "area"},
-        )
-    ):
-        return []
-    return [
-        Issue(
-            document.path,
-            f"must be located under {rule.root}/ or {schema.archive_root}/",
-        ),
-    ]
-
-
 def _validate_id(document: ContentDocument, document_type: str) -> list[Issue]:
     document_id = document.metadata.get("id")
     if document_id is None:
@@ -198,57 +160,6 @@ def _validate_id(document: ContentDocument, document_type: str) -> list[Issue]:
     if not document_id.startswith(f"{document_type}:"):
         return [Issue(document.path, f"id must start with {document_type}:")]
     return []
-
-
-def _validate_artifact_location(artifact: Artifact, schema: Schema) -> list[Issue]:
-    if any(artifact.path.is_relative_to(root) for root in schema.artifact.roots):
-        return []
-    if _has_archive_year(artifact.path, schema.archive_root):
-        return []
-    roots = ", ".join(f"{root}/" for root in schema.artifact.roots)
-    return [
-        Issue(
-            artifact.path,
-            f"artifact must be located under one of: {roots}, {schema.archive_root}/",
-        ),
-    ]
-
-
-def _is_archive_location(
-    path: Path,
-    archive_root: Path,
-    archive_directory: Path,
-    *,
-    indexed: bool,
-) -> bool:
-    try:
-        relative = path.relative_to(archive_root)
-    except ValueError:
-        return False
-    prefix_size = 1 + len(archive_directory.parts)
-    if len(relative.parts) <= prefix_size:
-        return False
-    year = relative.parts[0]
-    if len(year) != ARCHIVE_YEAR_LENGTH or not year.isdigit():
-        return False
-    if relative.parts[1:prefix_size] != archive_directory.parts:
-        return False
-    remainder = relative.parts[prefix_size:]
-    if indexed:
-        return len(remainder) == INDEX_DOCUMENT_REMAINDER_PARTS and remainder[-1] == "index.md"
-    return len(remainder) == 1 and remainder[0].endswith(".md")
-
-
-def _has_archive_year(path: Path, archive_root: Path) -> bool:
-    try:
-        relative = path.relative_to(archive_root)
-    except ValueError:
-        return False
-    return bool(
-        relative.parts
-        and len(relative.parts[0]) == ARCHIVE_YEAR_LENGTH
-        and relative.parts[0].isdigit()
-    )
 
 
 def _validate_status(document: Document, rule: TypeRule) -> list[Issue]:
