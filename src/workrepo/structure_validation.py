@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from workrepo.creation import WINDOWS_RESERVED_NAMES
+from workrepo.creation_validation import WINDOWS_RESERVED_NAMES
 from workrepo.models import Issue
 from workrepo.state import RepositoryState
 from workrepo.yamlutil import load_yaml
@@ -163,4 +163,3 @@ def _validate_yaml_file(path: Path, relative: Path) -> list[Issue]:
 
 def _is_ignored(path: Path) -> bool:
     return any(part in IGNORED_REPOSITORY_DIRECTORIES for part in path.parts)
-

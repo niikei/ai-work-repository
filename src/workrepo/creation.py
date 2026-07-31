@@ -8,6 +8,13 @@ from urllib.parse import urlsplit
 
 from workrepo.calendar import work_week
 from workrepo.clock import current_date
+from workrepo.creation_validation import (
+    ensure_inside_repository,
+    ensure_path_available,
+    normalize_title,
+    validate_log_slug,
+    validate_slug,
+)
 from workrepo.discovery import discover_artifacts, discover_documents
 from workrepo.models import ContentDocument
 from workrepo.policy import load_policy
@@ -44,19 +51,6 @@ ARTIFACT_DIRECTORIES = {
     "control": "controls",
     "external-resource": "links",
 }
-SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-LOG_DATE_PREFIX_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}(?:-|$)")
-MAX_SLUG_LENGTH = 64
-WINDOWS_RESERVED_NAMES = frozenset(
-    {
-        "aux",
-        "con",
-        "nul",
-        "prn",
-        *(f"com{number}" for number in range(1, 10)),
-        *(f"lpt{number}" for number in range(1, 10)),
-    },
-)
 H1_PATTERN = re.compile(r"^# .+$", flags=re.MULTILINE)
 ID_PATTERN = re.compile(r"^id: .+$", flags=re.MULTILINE)
 TYPE_PATTERN = re.compile(r"^type: .+$", flags=re.MULTILINE)
@@ -119,9 +113,9 @@ def create_document(
     if request.document_type not in schema.types or request.document_type not in DOCUMENT_TYPES:
         message = f"unsupported document type: {request.document_type}"
         raise ValueError(message)
-    _validate_slug(request.slug)
-    _validate_log_slug(request.document_type, request.slug)
-    normalized_title = _normalize_title(request.title)
+    validate_slug(request.slug)
+    validate_log_slug(request.document_type, request.slug)
+    normalized_title = normalize_title(request.title)
     _validate_related_ids(repository_root, schema, request.related)
 
     effective_date = request.document_date or _repository_today(repository_root)
@@ -132,7 +126,7 @@ def create_document(
         request.slug,
         effective_date,
     )
-    _ensure_path_available(destination, repository_root)
+    ensure_path_available(destination, repository_root)
 
     template_name = TEMPLATE_NAMES.get(request.document_type, request.document_type)
     template_path = repository_root / schema.templates_root / f"{template_name}.md"
@@ -161,8 +155,8 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
     """Create one typed artifact below its owning Project or Area."""
     repository_root = root.resolve()
     schema = load_schema(repository_root)
-    _validate_slug(request.slug)
-    normalized_title = _normalize_title(request.title)
+    validate_slug(request.slug)
+    normalized_title = normalize_title(request.title)
     documents, parse_issues = discover_documents(repository_root, schema)
     if parse_issues:
         message = "cannot create an artifact while entity parse issues exist"
@@ -194,7 +188,7 @@ def create_artifact(root: Path, request: ArtifactRequest) -> Path:
         raise FileExistsError(message)
     directory = ARTIFACT_DIRECTORIES[request.kind]
     destination = repository_root / parent.path.parent / directory / f"{request.slug}.md"
-    _ensure_path_available(destination, repository_root)
+    ensure_path_available(destination, repository_root)
     template_name = "external-resource.md" if request.kind == "external-resource" else "artifact.md"
     template = (repository_root / schema.templates_root / template_name).read_text(
         encoding="utf-8",
@@ -231,7 +225,7 @@ def capture_inbox(
 
     effective_date = capture_date or _repository_today(repository_root)
     path = repository_root / schema.inbox_root / f"{effective_date.isoformat()}.md"
-    _ensure_inside_repository(path, repository_root)
+    ensure_inside_repository(path, repository_root)
     item = f"- [ ] {normalized_text}\n"
     if path.exists():
         current = path.read_text(encoding="utf-8")
@@ -292,35 +286,6 @@ def _render_template(
     return f"{rendered.rstrip()}\n"
 
 
-def _validate_slug(slug: str) -> None:
-    if len(slug) > MAX_SLUG_LENGTH:
-        message = f"slug must be at most {MAX_SLUG_LENGTH} characters"
-        raise ValueError(message)
-    if SLUG_PATTERN.fullmatch(slug) is None:
-        message = "slug must use lowercase letters, numbers, and single hyphens"
-        raise ValueError(message)
-    if slug.casefold() in WINDOWS_RESERVED_NAMES:
-        message = f"slug is reserved on Windows: {slug}"
-        raise ValueError(message)
-
-
-def _validate_log_slug(document_type: str, slug: str) -> None:
-    if document_type == "log" and LOG_DATE_PREFIX_PATTERN.match(slug) is not None:
-        message = (
-            "log slug must omit the date because it is added automatically; "
-            "use 'daily', not '2026-07-30-daily'"
-        )
-        raise ValueError(message)
-
-
-def _normalize_title(title: str) -> str:
-    normalized = " ".join(title.split())
-    if not normalized:
-        message = "title must not be empty"
-        raise ValueError(message)
-    return normalized
-
-
 def _validate_related_ids(root: Path, schema: Schema, related: tuple[str, ...]) -> None:
     if len(related) != len(set(related)):
         message = "related IDs must not contain duplicates"
@@ -344,36 +309,6 @@ def _known_ids(root: Path, schema: Schema) -> set[str]:
 def _document_id(document: ContentDocument) -> str | None:
     value = document.metadata.get("id")
     return value if isinstance(value, str) else None
-
-
-def _ensure_path_available(destination: Path, root: Path) -> None:
-    _ensure_inside_repository(destination, root)
-    if destination.exists():
-        message = f"document already exists: {destination.relative_to(root)}"
-        raise FileExistsError(message)
-    current = root
-    for component in destination.relative_to(root).parts:
-        if not current.is_dir():
-            break
-        conflicting = next(
-            (
-                child
-                for child in current.iterdir()
-                if child.name.casefold() == component.casefold() and child.name != component
-            ),
-            None,
-        )
-        if conflicting is not None:
-            message = f"document path conflicts by letter case: {destination.relative_to(root)}"
-            raise FileExistsError(message)
-        current /= component
-
-
-def _ensure_inside_repository(destination: Path, root: Path) -> None:
-    if destination.resolve().is_relative_to(root.resolve()):
-        return
-    message = f"destination escapes repository: {destination}"
-    raise ValueError(message)
 
 
 def _render_artifact_template(
