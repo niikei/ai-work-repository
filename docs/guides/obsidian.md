@@ -47,7 +47,9 @@ uv run workrepo refresh
 次回の同期で置き換わるため、関係の変更は必ず`related`で行います。
 
 [Dashboard](../../DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
-ブックマークすると、Inbox、進行中Project、Areaへすぐ移動できます。
+ブックマークすると、Inboxに加えてAttention、進行中Project、Areaレビュー、直近LogのBaseを
+同じ画面で操作できます。Dashboardを開いた状態でObsidianを終了すれば、次回起動時にも前回の
+ワークスペースとして復元されます。
 
 完了済みProjectなどを`workrepo archive ID`で移動した場合も、標準Markdownリンクと
 生成関連リンクは新しい相対パスへ更新されます。Obsidianのファイル操作で管理対象を直接

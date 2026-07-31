@@ -19,17 +19,32 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
     assert "|  |" not in content
 
 
-def test_dashboard_links_to_available_management_bases(repository: Path) -> None:
-    """Operational Bases are discoverable without making them mandatory."""
+def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
+    """Operational Base views render inline without making them mandatory."""
     views = repository / "40-library/40-resources/views"
     views.mkdir(parents=True)
     (views / "projects.base").write_text("views: []\n", encoding="utf-8")
 
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
-    assert "## Management views" in content
-    assert "[Projects](40-library/40-resources/views/projects.base)" in content
-    assert "[Areas]" not in content
+    assert "## Operational cockpit" in content
+    assert "### Active projects" in content
+    assert "![[40-library/40-resources/views/projects.base#Active]]" in content
+    assert "<!-- markdownlint-disable MD045 -->" in content
+    assert "<!-- markdownlint-enable MD045 -->" in content
+    assert "### Area reviews" not in content
+
+
+def test_dashboard_links_to_available_reference_bases(repository: Path) -> None:
+    """Less frequent management views remain easy to open."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "library.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert "### Reference views" in content
+    assert "[Library](40-library/40-resources/views/library.base)" in content
 
 
 def test_dashboard_summarizes_inbox_project_and_area(repository: Path) -> None:

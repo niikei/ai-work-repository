@@ -15,11 +15,21 @@ DASHBOARD_PATH = Path("DASHBOARD.md")
 INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
 INACTIVE_AREA_STATUSES = frozenset({"retired"})
 HEALTH_PRIORITY = {"red": 0, "amber": 1, "unknown": 2, "green": 3}
-MANAGEMENT_VIEWS = (
-    ("Attention center", Path("40-library/40-resources/views/attention.base")),
-    ("Projects", Path("40-library/40-resources/views/projects.base")),
-    ("Areas", Path("40-library/40-resources/views/areas.base")),
-    ("Recent logs", Path("40-library/40-resources/views/recent-logs.base")),
+COCKPIT_VIEWS = (
+    (
+        "Attention",
+        Path("40-library/40-resources/views/attention.base"),
+        "All attention",
+    ),
+    ("Active projects", Path("40-library/40-resources/views/projects.base"), "Active"),
+    ("Area reviews", Path("40-library/40-resources/views/areas.base"), "Attention"),
+    (
+        "Recent activity",
+        Path("40-library/40-resources/views/recent-logs.base"),
+        "Last 7 days",
+    ),
+)
+REFERENCE_VIEWS = (
     ("Library", Path("40-library/40-resources/views/library.base")),
     (
         "External resources",
@@ -64,20 +74,31 @@ def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> P
 
 
 def _management_views_section(root: Path) -> tuple[str, ...]:
+    embeds = tuple(
+        line
+        for label, path, view in COCKPIT_VIEWS
+        if (root / path).is_file()
+        for line in (f"### {label}", "", f"![[{path.as_posix()}#{view}]]", "")
+    )
     links = tuple(
         f"- [{label}]({_path_link(path)})"
-        for label, path in MANAGEMENT_VIEWS
+        for label, path in REFERENCE_VIEWS
         if (root / path).is_file()
     )
-    if not links:
+    if not embeds and not links:
         return ()
-    return (
-        "## Management views",
+    content = [
+        "## Operational cockpit",
         "",
-        *links,
+        "<!-- markdownlint-disable MD045 -->",
         "",
-        "_Open these links in Obsidian to use interactive filters and grouped views._",
-    )
+        *embeds,
+        "<!-- markdownlint-enable MD045 -->",
+        "",
+    ]
+    if links:
+        content.extend(("### Reference views", "", *links))
+    return tuple(content)
 
 
 def _inbox_section(
