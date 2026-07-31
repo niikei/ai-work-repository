@@ -68,7 +68,7 @@ def _validate_repository_files(state: RepositoryState) -> list[Issue]:
                     f"{size} > {state.policy.files.max_attachment_bytes} bytes",
                 ),
             )
-        if path.suffix.casefold() in {".yaml", ".yml"}:
+        if path.suffix.casefold() in {".base", ".yaml", ".yml"}:
             issues.extend(_validate_yaml_file(path, relative))
         if path.is_symlink():
             try:

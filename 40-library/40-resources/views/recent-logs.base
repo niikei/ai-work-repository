@@ -1,0 +1,51 @@
+filters:
+  and:
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "log"
+formulas:
+  record: file.asLink(id)
+properties:
+  formula.record:
+    displayName: Log
+  date:
+    displayName: Date
+  updated:
+    displayName: Updated
+  related:
+    displayName: Related
+views:
+  - type: table
+    name: Last 7 days
+    filters: date >= today() - "7d"
+    order:
+      - formula.record
+      - date
+      - related
+    sort:
+      - property: date
+        direction: DESC
+    limit: 50
+  - type: table
+    name: Last 30 days
+    filters: date >= today() - "30d"
+    order:
+      - formula.record
+      - date
+      - updated
+      - related
+    sort:
+      - property: date
+        direction: DESC
+    limit: 100
+  - type: table
+    name: All logs
+    order:
+      - formula.record
+      - date
+      - updated
+      - related
+    sort:
+      - property: date
+        direction: DESC
+    limit: 500

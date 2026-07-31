@@ -1,0 +1,85 @@
+filters:
+  and:
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "project"
+formulas:
+  record: file.asLink(id)
+  overdue: if(target_date, target_date < today() && status != "completed" && status != "cancelled", false)
+properties:
+  formula.record:
+    displayName: Project
+  status:
+    displayName: Status
+  health:
+    displayName: Health
+  owner:
+    displayName: Owner
+  priority:
+    displayName: Priority
+  target_date:
+    displayName: Target date
+  formula.overdue:
+    displayName: Overdue
+  updated:
+    displayName: Updated
+  related:
+    displayName: Related
+views:
+  - type: table
+    name: Attention
+    filters:
+      or:
+        - status == "blocked"
+        - health == "amber"
+        - health == "red"
+        - priority == "critical"
+        - formula.overdue
+    order:
+      - formula.record
+      - status
+      - health
+      - priority
+      - owner
+      - target_date
+      - formula.overdue
+      - updated
+      - related
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 50
+  - type: table
+    name: Active
+    filters: status == "active"
+    order:
+      - formula.record
+      - health
+      - priority
+      - owner
+      - target_date
+      - updated
+      - related
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 100
+  - type: table
+    name: Portfolio
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - formula.record
+      - status
+      - health
+      - priority
+      - owner
+      - target_date
+      - formula.overdue
+      - updated
+      - created
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 200

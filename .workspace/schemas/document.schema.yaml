@@ -1,4 +1,4 @@
-version: 4
+version: 5
 title_source: first_h1
 inbox_root: 00-inbox
 templates_root: 90-templates
@@ -21,15 +21,16 @@ types:
     archive: projects
     statuses: [planned, active, blocked, completed, cancelled]
     required: [health]
-    optional: []
+    optional: [owner, priority, target_date]
     values:
       health: [unknown, green, amber, red]
+      priority: [low, medium, high, critical]
   area:
     root: 30-areas
     archive: areas
     statuses: [active, paused, retired]
     required: [health, review_cycle, last_reviewed]
-    optional: [group]
+    optional: [group, owner]
     values:
       health: [unknown, green, amber, red]
       review_cycle: [weekly, monthly, quarterly, annual]

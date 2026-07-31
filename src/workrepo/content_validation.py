@@ -95,6 +95,8 @@ def _validate_document(
         ),
     )
     issues.extend(_validate_dates(document, today=today))
+    if "owner" in metadata and not _is_nonempty_string(metadata["owner"]):
+        issues.append(Issue(document.path, "owner must be a non-empty string"))
     issues.extend(_validate_log_path(document, rule))
     issues.extend(_validate_related(document))
     return issues
@@ -223,10 +225,15 @@ def _enum_issue(
 
 def _validate_dates(document: ContentDocument, *, today: date) -> list[Issue]:
     fields = ["created", "updated"]
+    future_limited_fields = {"created", "updated"}
     if document.metadata.get("type") == "area":
         fields.append("last_reviewed")
+        future_limited_fields.add("last_reviewed")
+    if document.metadata.get("type") == "project":
+        fields.append("target_date")
     if document.metadata.get("kind") == "external-resource":
         fields.append("last_verified")
+        future_limited_fields.add("last_verified")
     parsed: dict[str, date] = {}
     issues: list[Issue] = []
     for field in fields:
@@ -241,9 +248,9 @@ def _validate_dates(document: ContentDocument, *, today: date) -> list[Issue]:
     issues.extend(
         Issue(document.path, f"{field} must not be in the future")
         for field, value in parsed.items()
-        if value > today
+        if field in future_limited_fields and value > today
     )
-    if parsed.keys() >= set(fields) and parsed["updated"] < parsed["created"]:
+    if parsed.keys() >= {"created", "updated"} and parsed["updated"] < parsed["created"]:
         issues.append(Issue(document.path, "updated must not be earlier than created"))
     if (
         "last_reviewed" in parsed
@@ -258,6 +265,10 @@ def _validate_dates(document: ContentDocument, *, today: date) -> list[Issue]:
     ):
         issues.append(Issue(document.path, "date must be an ISO date"))
     return issues
+
+
+def _is_nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _validate_artifact_period(artifact: Artifact) -> list[Issue]:

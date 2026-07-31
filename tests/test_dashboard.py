@@ -14,9 +14,47 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
     """Generated empty rows agree with the repository's MD060 style."""
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
-    assert "| _None_ | | | |" in content
+    assert "| _None_ | | | | | | |" in content
     assert "| _None_ | | | | |" in content
     assert "|  |" not in content
+    assert "<!--" not in content
+
+
+def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
+    """The unified operational Base renders inline without being mandatory."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "cockpit.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert "## Operational cockpit" in content
+    assert "![[40-library/40-resources/views/cockpit.base#Attention]]" in content
+    assert "markdownlint-disable" not in content
+
+
+def test_dashboard_places_cockpit_before_markdown_summary(repository: Path) -> None:
+    """Obsidian opens on interactive views instead of static fallback tables."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "cockpit.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert content.index("## Operational cockpit") < content.index("## Markdown summary")
+    assert content.index("## Markdown summary") < content.index("## Inbox")
+
+
+def test_dashboard_links_to_available_reference_bases(repository: Path) -> None:
+    """Less frequent management views remain easy to open."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "library.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert "### Reference views" in content
+    assert "[Library](40-library/40-resources/views/library.base)" in content
 
 
 def test_dashboard_summarizes_inbox_project_and_area(repository: Path) -> None:

@@ -1,0 +1,45 @@
+/* Keep repository internals available while presenting a focused knowledge UI. */
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path="src"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path="tests"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path=".github"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path=".workspace"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-folder:has(> .nav-folder-title[data-path=".venv"]) {
+  display: none;
+}
+
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="pyproject.toml"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="uv.lock"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="CHANGELOG.md"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="CONTRIBUTING.md"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="LICENSE"]),
+.workspace-leaf-content[data-type="file-explorer"]
+  .nav-file:has(> .nav-file-title[data-path="SECURITY.md"]) {
+  display: none;
+}
+
+/* The embedded cockpit is an operational surface, not a view editor. */
+.internal-embed.bases-embed[src^="40-library/40-resources/views/cockpit.base"]
+  :is(
+    .bases-toolbar-sort-menu,
+    .bases-toolbar-filter-menu,
+    .bases-toolbar-properties-menu,
+    .bases-toolbar-new-item-menu,
+    .embed-action.edit-block-button
+  ) {
+  display: none;
+}
+
+.internal-embed.bases-embed[src^="40-library/40-resources/views/cockpit.base"]
+  .bases-thead {
+  pointer-events: none;
+}

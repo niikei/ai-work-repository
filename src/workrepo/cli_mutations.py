@@ -37,11 +37,8 @@ def _run_new(
 
 def run_new_command(root: Path, args: argparse.Namespace) -> int:
     if args.document_type == "artifact":
-        if args.parent is None or args.kind is None:
-            print("ERROR artifact requires --parent and --kind")
-            return 1
-        if args.template is not None:
-            print("ERROR --template is only valid for log")
+        if (option_error := _artifact_option_error(args)) is not None:
+            print(f"ERROR {option_error}")
             return 1
         try:
             external_resource = _external_resource_metadata(args)
@@ -62,8 +59,8 @@ def run_new_command(root: Path, args: argparse.Namespace) -> int:
             return 1
         print(f"Created {path.relative_to(root.resolve())}.")
         return 0
-    if args.parent is not None or args.kind is not None or _has_external_resource_arguments(args):
-        print("ERROR artifact-only options cannot be used for an entity")
+    if (option_error := _entity_option_error(args)) is not None:
+        print(f"ERROR {option_error}")
         return 1
     return _run_new(
         root,
@@ -74,8 +71,37 @@ def run_new_command(root: Path, args: argparse.Namespace) -> int:
             related=tuple(args.related),
             document_date=args.date,
             template_name=args.template,
+            owner=args.owner,
+            priority=args.priority,
+            target_date=args.target_date,
         ),
     )
+
+
+def _artifact_option_error(args: argparse.Namespace) -> str | None:
+    if args.parent is None or args.kind is None:
+        return "artifact requires --parent and --kind"
+    if args.template is not None:
+        return "--template is only valid for log"
+    if args.priority is not None or args.target_date is not None:
+        return "--priority and --target-date are only valid for project"
+    return None
+
+
+def _entity_option_error(args: argparse.Namespace) -> str | None:
+    if (
+        args.parent is not None
+        or args.kind is not None
+        or _has_external_resource_arguments(args, include_owner=False)
+    ):
+        return "artifact-only options cannot be used for an entity"
+    if args.owner is not None and args.document_type not in {"project", "area"}:
+        return "--owner is only valid for project and area entities"
+    if (
+        args.priority is not None or args.target_date is not None
+    ) and args.document_type != "project":
+        return "--priority and --target-date are only valid for project"
+    return None
 
 
 def _external_resource_metadata(
@@ -107,13 +133,18 @@ def _external_resource_metadata(
     )
 
 
-def _has_external_resource_arguments(args: argparse.Namespace) -> bool:
+def _has_external_resource_arguments(
+    args: argparse.Namespace,
+    *,
+    include_owner: bool = True,
+) -> bool:
+    owner = args.owner if include_owner else None
     return any(
         value is not None
         for value in (
             args.url,
             args.provider,
-            args.owner,
+            owner,
             args.access,
             args.last_verified,
         )

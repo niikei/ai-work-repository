@@ -14,6 +14,8 @@ Thumbs.db
 .obsidian/*
 !.obsidian/app.json
 !.obsidian/templates.json
+!.obsidian/snippets/
+!.obsidian/snippets/vault-focus.css
 
 # Generated machine-readable views are reproducible from tracked documents.
 .workspace/cache/*

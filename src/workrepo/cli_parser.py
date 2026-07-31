@@ -79,6 +79,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="owning Project or Area ID (required for artifact)",
     )
     new_parser.add_argument(
+        "--owner",
+        help="owner for a Project, Area, or external-resource Artifact",
+    )
+    new_parser.add_argument(
+        "--priority",
+        choices=("low", "medium", "high", "critical"),
+        help="Project priority",
+    )
+    new_parser.add_argument(
+        "--target-date",
+        type=_iso_date,
+        help="Project target date in YYYY-MM-DD format",
+    )
+    new_parser.add_argument(
         "--kind",
         choices=tuple(ARTIFACT_DIRECTORIES),
         help="artifact kind (required for artifact)",
@@ -119,6 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="move an archived durable record back to its active type root",
     )
     restore_parser.add_argument("document_id", metavar="ID", help="stable document ID")
+    _add_auxiliary_commands(subparsers)
     subparsers.add_parser(
         "dashboard",
         help="generate the human-readable current-state dashboard",
@@ -188,8 +203,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     hooks_subparsers.add_parser("install", help="activate managed hooks locally")
     hooks_subparsers.add_parser("status", help="show whether managed hooks are active")
-    subparsers.add_parser("doctor", help="diagnose local repository setup")
     return parser
+
+
+def _add_auxiliary_commands(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = subparsers.add_parser(
+        "open",
+        help="open canonical content in Obsidian by stable ID",
+    )
+    parser.add_argument("document_id", metavar="ID", help="stable document ID")
+    subparsers.add_parser("doctor", help="diagnose local repository setup")
 
 
 def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:
@@ -197,10 +222,6 @@ def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--provider",
         help="external-resource Artifact provider, such as sharepoint",
-    )
-    parser.add_argument(
-        "--owner",
-        help="person or team responsible for the external-resource Artifact",
     )
     parser.add_argument(
         "--access",

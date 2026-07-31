@@ -1,0 +1,83 @@
+filters:
+  and:
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "area"
+formulas:
+  record: file.asLink(id)
+  next_review: last_reviewed + if(review_cycle == "weekly", "1w", if(review_cycle == "monthly", "1M", if(review_cycle == "quarterly", "3M", "1y")))
+  review_overdue: formula.next_review < today()
+properties:
+  formula.record:
+    displayName: Area
+  health:
+    displayName: Health
+  review_cycle:
+    displayName: Review cycle
+  last_reviewed:
+    displayName: Last reviewed
+  group:
+    displayName: Group
+  owner:
+    displayName: Owner
+  formula.next_review:
+    displayName: Next review
+  formula.review_overdue:
+    displayName: Overdue
+views:
+  - type: table
+    name: Attention
+    filters:
+      or:
+        - health == "amber"
+        - health == "red"
+        - health == "unknown"
+        - formula.review_overdue
+    order:
+      - formula.record
+      - health
+      - last_reviewed
+      - review_cycle
+      - formula.next_review
+      - formula.review_overdue
+      - group
+      - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 50
+  - type: table
+    name: By group
+    groupBy:
+      property: group
+      direction: ASC
+    order:
+      - formula.record
+      - health
+      - status
+      - last_reviewed
+      - review_cycle
+      - formula.next_review
+      - formula.review_overdue
+      - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100
+  - type: table
+    name: Review cadence
+    groupBy:
+      property: review_cycle
+      direction: ASC
+    order:
+      - formula.record
+      - last_reviewed
+      - formula.next_review
+      - formula.review_overdue
+      - health
+      - group
+      - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100

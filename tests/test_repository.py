@@ -369,7 +369,7 @@ def test_schema_version_is_enforced(repository: Path) -> None:
     """An incompatible schema cannot be interpreted with silent defaults."""
     schema_path = repository / ".workspace/schemas/document.schema.yaml"
     schema_path.write_text(
-        schema_path.read_text(encoding="utf-8").replace("version: 4", "version: 99"),
+        schema_path.read_text(encoding="utf-8").replace("version: 5", "version: 99"),
         encoding="utf-8",
     )
 
@@ -543,14 +543,16 @@ def test_check_ignores_links_in_code_blocks(repository: Path) -> None:
     assert check_repository(repository) == []
 
 
-def test_rejects_duplicate_keys_in_repository_yaml(repository: Path) -> None:
-    config = repository / "settings.yaml"
+@pytest.mark.parametrize("filename", ["settings.yaml", "views/projects.base"])
+def test_rejects_duplicate_keys_in_repository_yaml(repository: Path, filename: str) -> None:
+    config = repository / filename
+    config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text("mode: safe\nmode: fast\n", encoding="utf-8")
 
     issues = check_repository(repository)
 
     assert any(
-        issue.path == Path("settings.yaml") and "duplicate key" in issue.message for issue in issues
+        issue.path == Path(filename) and "duplicate key" in issue.message for issue in issues
     )
 
 

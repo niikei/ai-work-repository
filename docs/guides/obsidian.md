@@ -47,11 +47,106 @@ uv run workrepo refresh
 次回の同期で置き換わるため、関係の変更は必ず`related`で行います。
 
 [Dashboard](../../DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
-ブックマークすると、Inbox、進行中Project、Areaへすぐ移動できます。
+ブックマークすると、Inboxに加えてAttention、進行中Project、Areaレビュー、直近LogのBaseを
+同じ画面で操作できます。Dashboardを開いた状態でObsidianを終了すれば、次回起動時にも前回の
+ワークスペースとして復元されます。操作可能なBaseを先頭に配置し、その下にObsidian以外でも
+読めるMarkdown概要を配置しています。
 
 完了済みProjectなどを`workrepo archive ID`で移動した場合も、標準Markdownリンクと
 生成関連リンクは新しい相対パスへ更新されます。Obsidianのファイル操作で管理対象を直接
 Archiveへ移動せず、必ずコマンドを使ってください。
+
+## Basesで状態を確認する
+
+コアプラグインのBasesを有効にすると、`40-library/40-resources/views/`にある次の管理画面を
+利用できます。
+
+- `cockpit.base`: 要注意、Inbox、進行中Project、Areaレビュー、直近Logを1画面で切り替え
+- `attention.base`: Project、Area、外部リソースを横断する要注意項目
+- `projects.base`: 要注意、進行中、全体ポートフォリオ
+- `areas.base`: 要注意、group別、レビュー周期別
+- `recent-logs.base`: 直近7日、直近30日、全Log
+- `external-resources.base`: 90日以上未確認、access別、全外部リソース
+- `library.base`: Draft、種類別のActive、Retired
+
+各行は安定IDを表示名にしたリンクです。ProjectとAreaは物理ファイル名がどちらも`index.md`の
+ため、`file.name`ではなくIDを使って区別します。Projectの要注意ビューには、blocked、
+amber/red、critical、および`target_date`超過が表示されます。
+
+Base上で既存プロパティを編集した場合も、変更後に`uv run workrepo check`を実行してください。
+Baseから新しい行を作ると、必須プロパティや配置規則を満たさない可能性があります。新規文書は
+引き続き`workrepo new`、一時記録は`workrepo capture`を使います。
+
+各ビューには用途に合う既定の並び順と件数上限があります。要注意項目や期限は古いものから、
+更新履歴やLogは新しいものから表示されます。上限を超えた項目は削除されず、Baseのフィルターや
+上限を変更すれば確認できます。
+
+ターミナルや検索結果で安定IDが分かっている場合は、パスを探さずに対象を開けます。
+
+```shell
+uv run workrepo open project:erp-upgrade
+```
+
+Archiveやrestoreで物理パスが変わった後も、同じIDで現在のファイルを解決します。
+
+## Cockpitをホーム画面にする
+
+`DASHBOARD.md`の先頭には`cockpit.base`が埋め込まれています。Base左上のビュー名から、Attention、
+Inbox、進行中Project、Areaレビュー、直近Logを切り替えます。固定された1つの表だけを使うため、移動や
+ズームは不要です。Dashboardを開いた状態でObsidianを終了すれば、次回も同じ画面から始められます。
+
+`vault-focus`スニペットが有効な場合、埋め込みCockpitではビュー切り替えとSearchだけを操作でき、
+Sort、Filter、Properties、New、列の並べ替えは表示されません。このため日常操作で`.base`へ意図しない
+差分が入りません。共有する既定ビューを変更するときは`cockpit.base`を単独で開いて編集します。
+
+## よく使う場所をブックマークする
+
+Bookmarksは個人設定なのでGitでは共有しません。初回だけ、Dashboard、Inbox、管理Base、未処理Inbox
+検索を登録します。
+
+```shell
+obsidian bookmark file=DASHBOARD.md title=Dashboard
+obsidian bookmark folder=00-inbox title=Inbox
+obsidian bookmark file=40-library/40-resources/views/cockpit.base title="Operational views"
+obsidian bookmark search='path:00-inbox /- \[ \]/' title="Open inbox items"
+```
+
+以後は左サイドバーのBookmarksから日常操作へ移動できます。
+
+## 記録はworkrepoコマンドから作る
+
+Obsidian標準のDaily Notesは、このリポジトリの週単位Log配置と必須frontmatterを生成できません。
+ルート直下に規則外のDaily Noteを作らないよう、Daily Notesは無効にします。
+
+```shell
+obsidian plugin:disable id=daily-notes
+```
+
+思いついた内容はInboxへ追加し、正式なLogは管理コマンドで作ります。
+
+```shell
+uv run workrepo capture "確認する内容"
+uv run workrepo new log short-name --title "出来事のタイトル"
+```
+
+これにより配置、安定ID、日付、必須frontmatterが常にリポジトリ規則と一致します。
+
+## File Explorerを整理する
+
+`.obsidian/snippets/vault-focus.css`は、`src/`、`tests/`、開発用設定などをFile Explorerから
+隠します。ファイルは削除されず、Git、CLI、検索対象の既存規則には影響しません。
+
+Obsidianの「設定 → 外観 → CSSスニペット」で`vault-focus`を有効にします。CLIからも設定できます。
+
+```shell
+obsidian snippet:enable name=vault-focus
+```
+
+開発用ファイルを確認するときはスニペットを無効にします。
+
+```shell
+obsidian snippet:disable name=vault-focus
+```
 
 ## Gitで共有するもの
 
@@ -64,3 +159,5 @@ Archiveへ移動せず、必ずコマンドを使ってください。
 - Obsidianのキャッシュ
 
 プラグインなしでも読める標準Markdownを維持することが、このリポジトリの基本方針です。
+
+スキーマv4から更新する場合は、[スキーマv5移行ガイド](schema-v5-migration.md)を参照してください。

@@ -51,6 +51,9 @@ uv run workrepo new area erp-operations --title "ERP運用"
 # Areaに関連するProjectを作成
 uv run workrepo new project erp-upgrade \
   --title "ERP更改" \
+  --owner "ERP Team" \
+  --priority high \
+  --target-date 2026-09-30 \
   --related area:erp-operations
 
 # 日付付きのLogを作成
@@ -84,6 +87,9 @@ uv run workrepo list --type project --status active
 uv run workrepo list --type project --area area:erp-operations
 uv run workrepo search "cutover decision" --type artifact
 
+# 安定IDからObsidianで対象文書を開く
+uv run workrepo open project:erp-upgrade
+
 # 期間レビュー用の根拠を上限付きで取得する（AI向けは--json）
 uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20
 uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20 --json
@@ -116,6 +122,8 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - Entityと正式な成果物には、テンプレートに沿ったYAML frontmatterを付けます。
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
+- Projectは任意の`owner`、`priority`、`target_date`でポートフォリオ管理でき、Areaも
+  任意の`owner`を持てます。`target_date`は将来を表す計画日なので未来日を許可します。
 - ProjectとArea本体は`<root>/<slug>/index.md`の一階層に保ちます。内部の成果物は
   階層化できますが、入れ子のEntityや別の`index.md`は作りません。Entity直下のMarkdownは
   `index.md`だけにし、補助Markdownはサブディレクトリへ置きます。
@@ -151,7 +159,8 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 
 ## Obsidian
 
-このリポジトリのルートをObsidianのVaultとして開けます。共有する設定は、標準Markdown、
+このリポジトリのルートをObsidianのVaultとして開けます。日常操作は
+[Dashboard](DASHBOARD.md)に埋め込まれた固定Cockpitから始められます。共有する設定は、標準Markdown、
 相対リンク、`90-templates/`、文書ごとの`assets/`だけに限定しています。レイアウト、テーマ、
 プラグインなどの個人設定はGitで追跡しません。
 
@@ -163,7 +172,8 @@ uv run workrepo refresh
 ```
 
 生成された`workrepo:related`マーカー内は直接編集せず、frontmatterの`related`を変更して
-再実行してください。詳細は[Obsidian利用ガイド](docs/guides/obsidian.md)にあります。
+再実行してください。詳細は[Obsidian利用ガイド](docs/guides/obsidian.md)にあります。スキーマv4から
+更新する場合は[スキーマv5移行ガイド](docs/guides/schema-v5-migration.md)も確認してください。
 
 ## GitHub Copilot
 

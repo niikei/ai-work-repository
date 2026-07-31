@@ -18,6 +18,7 @@ from workrepo.gitops import (
     install_hooks,
 )
 from workrepo.navigation import ContentFilter, display_row, list_content, search_content
+from workrepo.obsidian import open_document
 from workrepo.repository import (
     build_index,
     refresh_repository,
@@ -80,6 +81,8 @@ def _dispatch_auxiliary(
         return _run_hooks(root, args.hooks_command)
     if args.command == "doctor":
         return _run_doctor(root)
+    if args.command == "open":
+        return _run_open(root, args.document_id)
     return parser.error(f"unknown command: {args.command}")
 
 
@@ -246,3 +249,13 @@ def _run_doctor(root: Path) -> int:
         label = "OK" if diagnostic.ok else "ERROR"
         print(f"{label:<5} {diagnostic.name}: {diagnostic.detail}")
     return 0 if all(item.ok for item in diagnostics) else 1
+
+
+def _run_open(root: Path, document_id: str) -> int:
+    try:
+        open_document(root, document_id)
+    except COMMAND_ERRORS as error:
+        print(f"ERROR {error}")
+        return 1
+    print(f"Opened {document_id} in Obsidian.")
+    return 0
