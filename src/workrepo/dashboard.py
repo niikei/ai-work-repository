@@ -19,6 +19,7 @@ MANAGEMENT_VIEWS = (
     ("Projects", Path("40-library/40-resources/views/projects.base")),
     ("Areas", Path("40-library/40-resources/views/areas.base")),
     ("Recent logs", Path("40-library/40-resources/views/recent-logs.base")),
+    ("Library", Path("40-library/40-resources/views/library.base")),
     (
         "External resources",
         Path("40-library/40-resources/views/external-resources.base"),

@@ -9,7 +9,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- native Obsidian Bases for Projects, Areas, recent Logs, and managed external resources;
+- native Obsidian Bases for Projects, Areas, recent Logs, managed external resources, and the
+  reusable Library;
 - optional Project owner, priority, and target date portfolio metadata, plus Area ownership;
 - stable-ID-based `workrepo open` integration with Obsidian;
 - bounded human- and machine-readable `workrepo review-context` evidence selection for period

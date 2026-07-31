@@ -25,6 +25,7 @@ _Inbox is clear._
 - [Projects](40-library/40-resources/views/projects.base)
 - [Areas](40-library/40-resources/views/areas.base)
 - [Recent logs](40-library/40-resources/views/recent-logs.base)
+- [Library](40-library/40-resources/views/library.base)
 - [External resources](40-library/40-resources/views/external-resources.base)
 
 _Open these links in Obsidian to use interactive filters and grouped views._

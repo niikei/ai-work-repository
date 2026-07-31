@@ -62,6 +62,7 @@ Archiveへ移動せず、必ずコマンドを使ってください。
 - `areas.base`: 要注意、group別、レビュー周期別
 - `recent-logs.base`: 直近7日、直近30日、全Log
 - `external-resources.base`: 90日以上未確認、access別、全外部リソース
+- `library.base`: Draft、種類別のActive、Retired
 
 各行は安定IDを表示名にしたリンクです。ProjectとAreaは物理ファイル名がどちらも`index.md`の
 ため、`file.name`ではなくIDを使って区別します。Projectの要注意ビューには、blocked、

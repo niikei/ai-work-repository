@@ -9,6 +9,7 @@ BASES_ROOT = PROJECT_ROOT / "40-library" / "40-resources" / "views"
 EXPECTED_BASES = {
     "areas.base": {"Attention", "By group", "Review cadence"},
     "external-resources.base": {"Needs verification", "By access", "All resources"},
+    "library.base": {"Drafts", "Active library", "Retired"},
     "projects.base": {"Attention", "Active", "Portfolio"},
     "recent-logs.base": {"Last 7 days", "Last 30 days", "All logs"},
 }

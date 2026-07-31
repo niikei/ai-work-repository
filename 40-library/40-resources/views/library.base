@@ -1,0 +1,61 @@
+filters:
+  and:
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - or:
+        - type == "system"
+        - type == "role"
+        - type == "organization"
+        - type == "service"
+        - type == "process"
+        - type == "procedure"
+        - type == "control"
+        - type == "standard"
+        - type == "concept"
+        - type == "guide"
+        - type == "glossary"
+        - type == "resource"
+formulas:
+  record: file.asLink(id)
+properties:
+  formula.record:
+    displayName: Record
+  type:
+    displayName: Type
+  status:
+    displayName: Status
+  updated:
+    displayName: Updated
+  related:
+    displayName: Related
+views:
+  - type: table
+    name: Drafts
+    filters: status == "draft"
+    order:
+      - formula.record
+      - type
+      - updated
+      - related
+  - type: table
+    name: Active library
+    filters: status == "active"
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - formula.record
+      - type
+      - updated
+      - related
+  - type: table
+    name: Retired
+    filters: status == "retired"
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - formula.record
+      - type
+      - updated
+      - related
