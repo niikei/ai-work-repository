@@ -32,42 +32,42 @@ views:
   - type: table
     name: Drafts
     filters: status == "draft"
-    sort:
-      - property: updated
-        direction: DESC
-    limit: 50
     order:
       - formula.record
       - type
       - updated
       - related
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 50
   - type: table
     name: Active library
     filters: status == "active"
     groupBy:
       property: type
       direction: ASC
-    sort:
-      - property: updated
-        direction: DESC
-    limit: 200
     order:
       - formula.record
       - type
       - updated
       - related
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 200
   - type: table
     name: Retired
     filters: status == "retired"
     groupBy:
       property: type
       direction: ASC
-    sort:
-      - property: updated
-        direction: DESC
-    limit: 100
     order:
       - formula.record
       - type
       - updated
       - related
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 100

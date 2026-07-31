@@ -23,37 +23,33 @@ views:
   - type: table
     name: Needs verification
     filters: last_verified < today() - "90d"
-    sort:
-      - property: last_verified
-        direction: ASC
-    limit: 50
     order:
       - formula.record
       - last_verified
       - owner
       - provider
       - access
+    sort:
+      - property: last_verified
+        direction: ASC
+    limit: 50
   - type: table
     name: By access
     groupBy:
       property: access
       direction: ASC
-    sort:
-      - property: last_verified
-        direction: ASC
-    limit: 100
     order:
       - formula.record
       - provider
       - owner
       - last_verified
       - url
-  - type: table
-    name: All resources
     sort:
       - property: last_verified
-        direction: DESC
-    limit: 200
+        direction: ASC
+    limit: 100
+  - type: table
+    name: All resources
     order:
       - formula.record
       - provider
@@ -61,3 +57,7 @@ views:
       - access
       - last_verified
       - url
+    sort:
+      - property: last_verified
+        direction: DESC
+    limit: 200

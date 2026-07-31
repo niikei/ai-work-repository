@@ -95,6 +95,38 @@ Archiveやrestoreで物理パスが変わった後も、同じIDで現在のフ�
 進行中Project、Areaレビュー、直近Logを切り替えます。固定された1つの表だけを使うため、移動や
 ズームは不要です。Dashboardを開いた状態でObsidianを終了すれば、次回も同じ画面から始められます。
 
+## よく使う場所をブックマークする
+
+Bookmarksは個人設定なのでGitでは共有しません。初回だけ、Dashboard、Inbox、管理Base、未処理Inbox
+検索を登録します。
+
+```shell
+obsidian bookmark file=DASHBOARD.md title=Dashboard
+obsidian bookmark folder=00-inbox title=Inbox
+obsidian bookmark file=40-library/40-resources/views/cockpit.base title="Operational views"
+obsidian bookmark search='path:00-inbox /- \[ \]/' title="Open inbox items"
+```
+
+以後は左サイドバーのBookmarksから日常操作へ移動できます。
+
+## 記録はworkrepoコマンドから作る
+
+Obsidian標準のDaily Notesは、このリポジトリの週単位Log配置と必須frontmatterを生成できません。
+ルート直下に規則外のDaily Noteを作らないよう、Daily Notesは無効にします。
+
+```shell
+obsidian plugin:disable id=daily-notes
+```
+
+思いついた内容はInboxへ追加し、正式なLogは管理コマンドで作ります。
+
+```shell
+uv run workrepo capture "確認する内容"
+uv run workrepo new log short-name --title "出来事のタイトル"
+```
+
+これにより配置、安定ID、日付、必須frontmatterが常にリポジトリ規則と一致します。
+
 ## File Explorerを整理する
 
 `.obsidian/snippets/vault-focus.css`は、`src/`、`tests/`、開発用設定などをFile Explorerから
