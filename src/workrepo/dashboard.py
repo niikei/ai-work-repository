@@ -15,6 +15,15 @@ DASHBOARD_PATH = Path("DASHBOARD.md")
 INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
 INACTIVE_AREA_STATUSES = frozenset({"retired"})
 HEALTH_PRIORITY = {"red": 0, "amber": 1, "unknown": 2, "green": 3}
+MANAGEMENT_VIEWS = (
+    ("Projects", Path("40-library/40-resources/views/projects.base")),
+    ("Areas", Path("40-library/40-resources/views/areas.base")),
+    ("Recent logs", Path("40-library/40-resources/views/recent-logs.base")),
+    (
+        "External resources",
+        Path("40-library/40-resources/views/external-resources.base"),
+    ),
+)
 
 
 def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> Path:
@@ -43,11 +52,30 @@ def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> P
                 today=current_date(repository_state.policy.timezone),
             ),
             "",
+            *_management_views_section(repository_root),
+            "",
         ),
     )
     output = repository_root / DASHBOARD_PATH
     output.write_text(content, encoding="utf-8")
     return output
+
+
+def _management_views_section(root: Path) -> tuple[str, ...]:
+    links = tuple(
+        f"- [{label}]({_path_link(path)})"
+        for label, path in MANAGEMENT_VIEWS
+        if (root / path).is_file()
+    )
+    if not links:
+        return ()
+    return (
+        "## Management views",
+        "",
+        *links,
+        "",
+        "_Open these links in Obsidian to use interactive filters and grouped views._",
+    )
 
 
 def _inbox_section(

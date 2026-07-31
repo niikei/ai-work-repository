@@ -19,6 +19,19 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
     assert "|  |" not in content
 
 
+def test_dashboard_links_to_available_management_bases(repository: Path) -> None:
+    """Operational Bases are discoverable without making them mandatory."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "projects.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert "## Management views" in content
+    assert "[Projects](40-library/40-resources/views/projects.base)" in content
+    assert "[Areas]" not in content
+
+
 def test_dashboard_summarizes_inbox_project_and_area(repository: Path) -> None:
     """The generated overview links to canonical state without copying it."""
     create_document(
