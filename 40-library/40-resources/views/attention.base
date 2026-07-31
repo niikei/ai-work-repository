@@ -1,0 +1,74 @@
+filters:
+  and:
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - formula.needs_attention
+formulas:
+  record: file.asLink(id)
+  project_overdue: if(type == "project" && target_date, target_date < today() && status != "completed" && status != "cancelled", false)
+  area_review_overdue: if(type == "area", last_reviewed + if(review_cycle == "weekly", "1w", if(review_cycle == "monthly", "1M", if(review_cycle == "quarterly", "3M", "1y"))) < today(), false)
+  resource_stale: if(type == "artifact" && kind == "external-resource", last_verified < today() - "90d", false)
+  needs_attention: if(type == "project", status == "blocked" || health == "amber" || health == "red" || priority == "critical" || formula.project_overdue, if(type == "area", health == "unknown" || health == "amber" || health == "red" || formula.area_review_overdue, formula.resource_stale))
+  reason: if(type == "project", if(status == "blocked", "Blocked", if(formula.project_overdue, "Target overdue", if(priority == "critical", "Critical priority", if(health == "red", "Red health", "Amber health")))), if(type == "area", if(formula.area_review_overdue, "Review overdue", if(health == "red", "Red health", if(health == "amber", "Amber health", "Unknown health"))), "Verification overdue"))
+  signal_date: if(type == "project", target_date, if(type == "area", last_reviewed, last_verified))
+properties:
+  formula.record:
+    displayName: Record
+  type:
+    displayName: Type
+  status:
+    displayName: Status
+  health:
+    displayName: Health
+  priority:
+    displayName: Priority
+  owner:
+    displayName: Owner
+  target_date:
+    displayName: Target date
+  last_reviewed:
+    displayName: Last reviewed
+  last_verified:
+    displayName: Last verified
+  formula.reason:
+    displayName: Reason
+  formula.signal_date:
+    displayName: Signal date
+views:
+  - type: table
+    name: All attention
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - formula.record
+      - type
+      - formula.reason
+      - owner
+      - formula.signal_date
+  - type: table
+    name: Projects
+    filters: type == "project"
+    order:
+      - formula.record
+      - status
+      - health
+      - priority
+      - owner
+      - target_date
+  - type: table
+    name: Areas
+    filters: type == "area"
+    order:
+      - formula.record
+      - status
+      - health
+      - owner
+      - last_reviewed
+  - type: table
+    name: External resources
+    filters: type == "artifact" && kind == "external-resource"
+    order:
+      - formula.record
+      - owner
+      - last_verified

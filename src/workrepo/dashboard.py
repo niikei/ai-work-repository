@@ -16,6 +16,7 @@ INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
 INACTIVE_AREA_STATUSES = frozenset({"retired"})
 HEALTH_PRIORITY = {"red": 0, "amber": 1, "unknown": 2, "green": 3}
 MANAGEMENT_VIEWS = (
+    ("Attention center", Path("40-library/40-resources/views/attention.base")),
     ("Projects", Path("40-library/40-resources/views/projects.base")),
     ("Areas", Path("40-library/40-resources/views/areas.base")),
     ("Recent logs", Path("40-library/40-resources/views/recent-logs.base")),

@@ -22,6 +22,7 @@ _Inbox is clear._
 
 ## Management views
 
+- [Attention center](40-library/40-resources/views/attention.base)
 - [Projects](40-library/40-resources/views/projects.base)
 - [Areas](40-library/40-resources/views/areas.base)
 - [Recent logs](40-library/40-resources/views/recent-logs.base)

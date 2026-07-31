@@ -58,6 +58,7 @@ Archiveへ移動せず、必ずコマンドを使ってください。
 コアプラグインのBasesを有効にすると、`40-library/40-resources/views/`にある次の管理画面を
 利用できます。
 
+- `attention.base`: Project、Area、外部リソースを横断する要注意項目
 - `projects.base`: 要注意、進行中、全体ポートフォリオ
 - `areas.base`: 要注意、group別、レビュー周期別
 - `recent-logs.base`: 直近7日、直近30日、全Log
