@@ -8,7 +8,13 @@ PROJECT_ROOT = Path(__file__).parents[1]
 BASES_ROOT = PROJECT_ROOT / "40-library" / "40-resources" / "views"
 EXPECTED_BASES = {
     "attention.base": {"All attention", "Projects", "Areas", "External resources"},
-    "cockpit.base": {"Attention", "Active projects", "Area reviews", "Recent activity"},
+    "cockpit.base": {
+        "Attention",
+        "Inbox",
+        "Active projects",
+        "Area reviews",
+        "Recent activity",
+    },
     "areas.base": {"Attention", "By group", "Review cadence"},
     "external-resources.base": {"Needs verification", "By access", "All resources"},
     "library.base": {"Drafts", "Active library", "Retired"},

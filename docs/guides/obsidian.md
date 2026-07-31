@@ -61,7 +61,7 @@ Archiveへ移動せず、必ずコマンドを使ってください。
 コアプラグインのBasesを有効にすると、`40-library/40-resources/views/`にある次の管理画面を
 利用できます。
 
-- `cockpit.base`: 要注意、進行中Project、Areaレビュー、直近Logを1画面で切り替え
+- `cockpit.base`: 要注意、Inbox、進行中Project、Areaレビュー、直近Logを1画面で切り替え
 - `attention.base`: Project、Area、外部リソースを横断する要注意項目
 - `projects.base`: 要注意、進行中、全体ポートフォリオ
 - `areas.base`: 要注意、group別、レビュー周期別
@@ -92,7 +92,7 @@ Archiveやrestoreで物理パスが変わった後も、同じIDで現在のフ�
 ## Cockpitをホーム画面にする
 
 `DASHBOARD.md`の先頭には`cockpit.base`が埋め込まれています。Base左上のビュー名から、Attention、
-進行中Project、Areaレビュー、直近Logを切り替えます。固定された1つの表だけを使うため、移動や
+Inbox、進行中Project、Areaレビュー、直近Logを切り替えます。固定された1つの表だけを使うため、移動や
 ズームは不要です。Dashboardを開いた状態でObsidianを終了すれば、次回も同じ画面から始められます。
 
 `vault-focus`スニペットが有効な場合、埋め込みCockpitではビュー切り替えとSearchだけを操作でき、

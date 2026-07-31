@@ -4,6 +4,7 @@ filters:
     - '!file.inFolder("90-templates")'
 formulas:
   record: file.asLink(id)
+  inbox_item: file.asLink(file.name)
   project_overdue: if(type == "project" && target_date, target_date < today() && status != "completed" && status != "cancelled", false)
   area_review_overdue: if(type == "area", last_reviewed + if(review_cycle == "weekly", "1w", if(review_cycle == "monthly", "1M", if(review_cycle == "quarterly", "3M", "1y"))) < today(), false)
   resource_stale: if(type == "artifact" && kind == "external-resource", last_verified < today() - "90d", false)
@@ -14,6 +15,8 @@ formulas:
 properties:
   formula.record:
     displayName: Record
+  formula.inbox_item:
+    displayName: Inbox item
   type:
     displayName: Type
   status:
@@ -36,6 +39,8 @@ properties:
     displayName: Signal date
   date:
     displayName: Date
+  file.mtime:
+    displayName: Modified
 views:
   - type: table
     name: Attention
@@ -49,6 +54,16 @@ views:
     sort:
       - property: formula.signal_date
         direction: ASC
+    limit: 50
+  - type: table
+    name: Inbox
+    filters: file.inFolder("00-inbox") && file.name != "README"
+    order:
+      - formula.inbox_item
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
     limit: 50
   - type: table
     name: Active projects

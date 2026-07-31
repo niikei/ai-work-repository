@@ -7,7 +7,13 @@ from workrepo.yamlutil import load_yaml
 PROJECT_ROOT = Path(__file__).parents[1]
 COCKPIT_PATH = PROJECT_ROOT / "40-library/40-resources/views/cockpit.base"
 SNIPPET_PATH = PROJECT_ROOT / ".obsidian/snippets/vault-focus.css"
-EXPECTED_COCKPIT_VIEWS = {"Attention", "Active projects", "Area reviews", "Recent activity"}
+EXPECTED_COCKPIT_VIEWS = {
+    "Attention",
+    "Inbox",
+    "Active projects",
+    "Area reviews",
+    "Recent activity",
+}
 HIDDEN_FOLDERS = {"src", "tests", ".github", ".workspace", ".venv"}
 HIDDEN_FILES = {
     "pyproject.toml",
@@ -26,6 +32,9 @@ def test_cockpit_exposes_operational_views_in_one_fixed_base() -> None:
     assert {view["name"] for view in payload["views"]} == EXPECTED_COCKPIT_VIEWS
     assert all(view["type"] == "table" for view in payload["views"])
     assert "formula.needs_attention" in payload["views"][0]["filters"]
+    inbox = next(view for view in payload["views"] if view["name"] == "Inbox")
+    assert 'file.inFolder("00-inbox")' in inbox["filters"]
+    assert 'file.name != "README"' in inbox["filters"]
 
 
 def test_focus_snippet_hides_only_declared_repository_chrome() -> None:
