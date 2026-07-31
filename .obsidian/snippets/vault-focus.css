@@ -26,3 +26,20 @@
   .nav-file:has(> .nav-file-title[data-path="SECURITY.md"]) {
   display: none;
 }
+
+/* The embedded cockpit is an operational surface, not a view editor. */
+.internal-embed.bases-embed[src^="40-library/40-resources/views/cockpit.base"]
+  :is(
+    .bases-toolbar-sort-menu,
+    .bases-toolbar-filter-menu,
+    .bases-toolbar-properties-menu,
+    .bases-toolbar-new-item-menu,
+    .embed-action.edit-block-button
+  ) {
+  display: none;
+}
+
+.internal-embed.bases-embed[src^="40-library/40-resources/views/cockpit.base"]
+  .bases-thead {
+  pointer-events: none;
+}

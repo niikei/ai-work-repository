@@ -35,3 +35,20 @@ def test_focus_snippet_hides_only_declared_repository_chrome() -> None:
     for path in HIDDEN_FOLDERS | HIDDEN_FILES:
         assert f'data-path="{path}"' in css
     assert 'data-path="DASHBOARD.md"' not in css
+
+
+def test_focus_snippet_locks_persistent_cockpit_controls() -> None:
+    """Embedded views keep navigation and search without easy config mutation."""
+    css = SNIPPET_PATH.read_text(encoding="utf-8")
+
+    assert 'src^="40-library/40-resources/views/cockpit.base"' in css
+    for class_name in (
+        "bases-toolbar-sort-menu",
+        "bases-toolbar-filter-menu",
+        "bases-toolbar-properties-menu",
+        "bases-toolbar-new-item-menu",
+        "edit-block-button",
+    ):
+        assert class_name in css
+    assert ".bases-toolbar-views-menu" not in css
+    assert ".bases-toolbar-search" not in css

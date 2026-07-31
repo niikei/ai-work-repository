@@ -95,6 +95,10 @@ Archiveやrestoreで物理パスが変わった後も、同じIDで現在のフ�
 進行中Project、Areaレビュー、直近Logを切り替えます。固定された1つの表だけを使うため、移動や
 ズームは不要です。Dashboardを開いた状態でObsidianを終了すれば、次回も同じ画面から始められます。
 
+`vault-focus`スニペットが有効な場合、埋め込みCockpitではビュー切り替えとSearchだけを操作でき、
+Sort、Filter、Properties、New、列の並べ替えは表示されません。このため日常操作で`.base`へ意図しない
+差分が入りません。共有する既定ビューを変更するときは`cockpit.base`を単独で開いて編集します。
+
 ## よく使う場所をブックマークする
 
 Bookmarksは個人設定なのでGitでは共有しません。初回だけ、Dashboard、Inbox、管理Base、未処理Inbox
