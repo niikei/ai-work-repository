@@ -171,7 +171,8 @@ uv run workrepo refresh
 ```
 
 生成された`workrepo:related`マーカー内は直接編集せず、frontmatterの`related`を変更して
-再実行してください。詳細は[Obsidian利用ガイド](docs/guides/obsidian.md)にあります。
+再実行してください。詳細は[Obsidian利用ガイド](docs/guides/obsidian.md)にあります。スキーマv4から
+更新する場合は[スキーマv5移行ガイド](docs/guides/schema-v5-migration.md)も確認してください。
 
 ## GitHub Copilot
 
