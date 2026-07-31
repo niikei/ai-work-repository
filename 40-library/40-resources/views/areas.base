@@ -1,9 +1,10 @@
 filters:
   and:
-    - 'file.ext == "md"'
-    - 'type == "area"'
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "area"
 formulas:
-  record: 'file.asLink(id)'
+  record: file.asLink(id)
 properties:
   formula.record:
     displayName: Area
@@ -20,9 +21,9 @@ views:
     name: Attention
     filters:
       or:
-        - 'health == "amber"'
-        - 'health == "red"'
-        - 'health == "unknown"'
+        - health == "amber"
+        - health == "red"
+        - health == "unknown"
     order:
       - formula.record
       - health

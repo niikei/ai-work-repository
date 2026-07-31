@@ -1,10 +1,11 @@
 filters:
   and:
-    - 'file.ext == "md"'
-    - 'type == "artifact"'
-    - 'kind == "external-resource"'
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "artifact"
+    - kind == "external-resource"
 formulas:
-  record: 'file.asLink(id)'
+  record: file.asLink(id)
 properties:
   formula.record:
     displayName: Resource
@@ -21,7 +22,7 @@ properties:
 views:
   - type: table
     name: Needs verification
-    filters: 'last_verified < today() - "90d"'
+    filters: last_verified < today() - "90d"
     order:
       - formula.record
       - last_verified

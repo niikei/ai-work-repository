@@ -21,7 +21,9 @@ def test_shared_bases_have_valid_structure() -> None:
     for filename, expected_views in EXPECTED_BASES.items():
         payload = load_yaml((BASES_ROOT / filename).read_text(encoding="utf-8"))
         assert isinstance(payload, dict)
-        assert "filters" in payload
+        filters = payload.get("filters")
+        assert isinstance(filters, dict)
+        assert '!file.inFolder("90-templates")' in filters.get("and", [])
         assert isinstance(payload.get("properties"), dict)
         views = payload.get("views")
         assert isinstance(views, list)

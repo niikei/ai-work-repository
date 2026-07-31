@@ -1,9 +1,10 @@
 filters:
   and:
-    - 'file.ext == "md"'
-    - 'type == "project"'
+    - file.ext == "md"
+    - '!file.inFolder("90-templates")'
+    - type == "project"
 formulas:
-  record: 'file.asLink(id)'
+  record: file.asLink(id)
 properties:
   formula.record:
     displayName: Project
@@ -20,9 +21,9 @@ views:
     name: Attention
     filters:
       or:
-        - 'status == "blocked"'
-        - 'health == "amber"'
-        - 'health == "red"'
+        - status == "blocked"
+        - health == "amber"
+        - health == "red"
     order:
       - formula.record
       - status
@@ -31,7 +32,7 @@ views:
       - related
   - type: table
     name: Active
-    filters: 'status == "active"'
+    filters: status == "active"
     order:
       - formula.record
       - health
