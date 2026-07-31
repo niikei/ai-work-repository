@@ -1,0 +1,50 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'type == "project"'
+formulas:
+  record: 'file.asLink(id)'
+properties:
+  formula.record:
+    displayName: Project
+  status:
+    displayName: Status
+  health:
+    displayName: Health
+  updated:
+    displayName: Updated
+  related:
+    displayName: Related
+views:
+  - type: table
+    name: Attention
+    filters:
+      or:
+        - 'status == "blocked"'
+        - 'health == "amber"'
+        - 'health == "red"'
+    order:
+      - formula.record
+      - status
+      - health
+      - updated
+      - related
+  - type: table
+    name: Active
+    filters: 'status == "active"'
+    order:
+      - formula.record
+      - health
+      - updated
+      - related
+  - type: table
+    name: Portfolio
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - formula.record
+      - status
+      - health
+      - updated
+      - created

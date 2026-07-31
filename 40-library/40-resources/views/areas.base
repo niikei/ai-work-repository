@@ -1,0 +1,52 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'type == "area"'
+formulas:
+  record: 'file.asLink(id)'
+properties:
+  formula.record:
+    displayName: Area
+  health:
+    displayName: Health
+  review_cycle:
+    displayName: Review cycle
+  last_reviewed:
+    displayName: Last reviewed
+  group:
+    displayName: Group
+views:
+  - type: table
+    name: Attention
+    filters:
+      or:
+        - 'health == "amber"'
+        - 'health == "red"'
+        - 'health == "unknown"'
+    order:
+      - formula.record
+      - health
+      - last_reviewed
+      - review_cycle
+      - group
+  - type: table
+    name: By group
+    groupBy:
+      property: group
+      direction: ASC
+    order:
+      - formula.record
+      - health
+      - status
+      - last_reviewed
+      - review_cycle
+  - type: table
+    name: Review cadence
+    groupBy:
+      property: review_cycle
+      direction: ASC
+    order:
+      - formula.record
+      - last_reviewed
+      - health
+      - group

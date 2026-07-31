@@ -53,6 +53,23 @@ uv run workrepo refresh
 生成関連リンクは新しい相対パスへ更新されます。Obsidianのファイル操作で管理対象を直接
 Archiveへ移動せず、必ずコマンドを使ってください。
 
+## Basesで状態を確認する
+
+コアプラグインのBasesを有効にすると、`40-library/40-resources/views/`にある次の管理画面を
+利用できます。
+
+- `projects.base`: 要注意、進行中、全体ポートフォリオ
+- `areas.base`: 要注意、group別、レビュー周期別
+- `recent-logs.base`: 直近7日、直近30日、全Log
+- `external-resources.base`: 90日以上未確認、access別、全外部リソース
+
+各行は安定IDを表示名にしたリンクです。ProjectとAreaは物理ファイル名がどちらも`index.md`の
+ため、`file.name`ではなくIDを使って区別します。
+
+Base上で既存プロパティを編集した場合も、変更後に`uv run workrepo check`を実行してください。
+Baseから新しい行を作ると、必須プロパティや配置規則を満たさない可能性があります。新規文書は
+引き続き`workrepo new`、一時記録は`workrepo capture`を使います。
+
 ## Gitで共有するもの
 
 `.obsidian/app.json`と`.obsidian/templates.json`だけを共有します。次のような個人状態は

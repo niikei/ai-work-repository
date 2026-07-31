@@ -1,0 +1,50 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'type == "artifact"'
+    - 'kind == "external-resource"'
+formulas:
+  record: 'file.asLink(id)'
+properties:
+  formula.record:
+    displayName: Resource
+  provider:
+    displayName: Provider
+  owner:
+    displayName: Owner
+  access:
+    displayName: Access
+  last_verified:
+    displayName: Last verified
+  url:
+    displayName: URL
+views:
+  - type: table
+    name: Needs verification
+    filters: 'last_verified < today() - "90d"'
+    order:
+      - formula.record
+      - last_verified
+      - owner
+      - provider
+      - access
+  - type: table
+    name: By access
+    groupBy:
+      property: access
+      direction: ASC
+    order:
+      - formula.record
+      - provider
+      - owner
+      - last_verified
+      - url
+  - type: table
+    name: All resources
+    order:
+      - formula.record
+      - provider
+      - owner
+      - access
+      - last_verified
+      - url
