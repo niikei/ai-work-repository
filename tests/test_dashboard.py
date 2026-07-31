@@ -17,6 +17,7 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
     assert "| _None_ | | | | | | |" in content
     assert "| _None_ | | | | |" in content
     assert "|  |" not in content
+    assert "<!--" not in content
 
 
 def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
@@ -30,8 +31,7 @@ def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
     assert "## Operational cockpit" in content
     assert "### Active projects" in content
     assert "![[40-library/40-resources/views/projects.base#Active]]" in content
-    assert "<!-- markdownlint-disable MD045 -->" in content
-    assert "<!-- markdownlint-enable MD045 -->" in content
+    assert "markdownlint-disable" not in content
     assert "### Area reviews" not in content
 
 

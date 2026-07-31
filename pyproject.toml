@@ -52,9 +52,13 @@ ignore = [
 
 [tool.rumdl]
 line-length = 100
+flavor = "obsidian"
 # Copilot instruction, prompt, and agent files use YAML frontmatter without requiring an H1.
 disable = ["MD041"]
 extend-enable = ["MD060"]
+
+[tool.rumdl.per-file-ignores]
+"**/DASHBOARD.md" = ["MD045"]
 
 [tool.rumdl.MD060]
 style = "compact"
