@@ -33,10 +33,6 @@ views:
         - health == "red"
         - health == "unknown"
         - formula.review_overdue
-    sort:
-      - property: formula.next_review
-        direction: ASC
-    limit: 50
     order:
       - formula.record
       - health
@@ -46,15 +42,15 @@ views:
       - formula.review_overdue
       - group
       - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 50
   - type: table
     name: By group
     groupBy:
       property: group
       direction: ASC
-    sort:
-      - property: formula.next_review
-        direction: ASC
-    limit: 100
     order:
       - formula.record
       - health
@@ -64,15 +60,15 @@ views:
       - formula.next_review
       - formula.review_overdue
       - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100
   - type: table
     name: Review cadence
     groupBy:
       property: review_cycle
       direction: ASC
-    sort:
-      - property: formula.next_review
-        direction: ASC
-    limit: 100
     order:
       - formula.record
       - last_reviewed
@@ -81,3 +77,7 @@ views:
       - health
       - group
       - owner
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100

@@ -35,10 +35,6 @@ views:
         - health == "red"
         - priority == "critical"
         - formula.overdue
-    sort:
-      - property: target_date
-        direction: ASC
-    limit: 50
     order:
       - formula.record
       - status
@@ -49,13 +45,13 @@ views:
       - formula.overdue
       - updated
       - related
-  - type: table
-    name: Active
-    filters: status == "active"
     sort:
       - property: target_date
         direction: ASC
-    limit: 100
+    limit: 50
+  - type: table
+    name: Active
+    filters: status == "active"
     order:
       - formula.record
       - health
@@ -64,15 +60,15 @@ views:
       - target_date
       - updated
       - related
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 100
   - type: table
     name: Portfolio
     groupBy:
       property: status
       direction: ASC
-    sort:
-      - property: updated
-        direction: DESC
-    limit: 200
     order:
       - formula.record
       - status
@@ -83,3 +79,7 @@ views:
       - formula.overdue
       - updated
       - created
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 200
