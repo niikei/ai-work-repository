@@ -5,6 +5,8 @@ filters:
     - type == "area"
 formulas:
   record: file.asLink(id)
+  next_review: last_reviewed + if(review_cycle == "weekly", "1w", if(review_cycle == "monthly", "1M", if(review_cycle == "quarterly", "3M", "1y")))
+  review_overdue: formula.next_review < today()
 properties:
   formula.record:
     displayName: Area
@@ -18,6 +20,10 @@ properties:
     displayName: Group
   owner:
     displayName: Owner
+  formula.next_review:
+    displayName: Next review
+  formula.review_overdue:
+    displayName: Overdue
 views:
   - type: table
     name: Attention
@@ -26,11 +32,14 @@ views:
         - health == "amber"
         - health == "red"
         - health == "unknown"
+        - formula.review_overdue
     order:
       - formula.record
       - health
       - last_reviewed
       - review_cycle
+      - formula.next_review
+      - formula.review_overdue
       - group
       - owner
   - type: table
@@ -44,6 +53,8 @@ views:
       - status
       - last_reviewed
       - review_cycle
+      - formula.next_review
+      - formula.review_overdue
       - owner
   - type: table
     name: Review cadence
@@ -53,6 +64,8 @@ views:
     order:
       - formula.record
       - last_reviewed
+      - formula.next_review
+      - formula.review_overdue
       - health
       - group
       - owner

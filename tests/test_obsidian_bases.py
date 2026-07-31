@@ -25,7 +25,18 @@ def test_shared_bases_have_valid_structure() -> None:
         assert isinstance(filters, dict)
         assert '!file.inFolder("90-templates")' in filters.get("and", [])
         assert isinstance(payload.get("properties"), dict)
+        assert isinstance(payload.get("formulas"), dict)
         views = payload.get("views")
         assert isinstance(views, list)
         assert {view["name"] for view in views} == expected_views
         assert all(view.get("type") == "table" for view in views)
+
+
+def test_area_base_derives_review_schedule() -> None:
+    """Area attention includes overdue reviews derived from canonical cadence."""
+    payload = load_yaml((BASES_ROOT / "areas.base").read_text(encoding="utf-8"))
+    formulas = payload["formulas"]
+
+    assert "last_reviewed" in formulas["next_review"]
+    assert "review_cycle" in formulas["next_review"]
+    assert formulas["review_overdue"] == "formula.next_review < today()"
