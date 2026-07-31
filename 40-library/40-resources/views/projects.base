@@ -35,6 +35,10 @@ views:
         - health == "red"
         - priority == "critical"
         - formula.overdue
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - status
@@ -48,6 +52,10 @@ views:
   - type: table
     name: Active
     filters: status == "active"
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 100
     order:
       - formula.record
       - health
@@ -61,6 +69,10 @@ views:
     groupBy:
       property: status
       direction: ASC
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 200
     order:
       - formula.record
       - status

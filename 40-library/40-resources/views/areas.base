@@ -33,6 +33,10 @@ views:
         - health == "red"
         - health == "unknown"
         - formula.review_overdue
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - health
@@ -47,6 +51,10 @@ views:
     groupBy:
       property: group
       direction: ASC
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100
     order:
       - formula.record
       - health
@@ -61,6 +69,10 @@ views:
     groupBy:
       property: review_cycle
       direction: ASC
+    sort:
+      - property: formula.next_review
+        direction: ASC
+    limit: 100
     order:
       - formula.record
       - last_reviewed

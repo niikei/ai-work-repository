@@ -18,6 +18,10 @@ views:
   - type: table
     name: Last 7 days
     filters: date >= today() - "7d"
+    sort:
+      - property: date
+        direction: DESC
+    limit: 50
     order:
       - formula.record
       - date
@@ -25,6 +29,10 @@ views:
   - type: table
     name: Last 30 days
     filters: date >= today() - "30d"
+    sort:
+      - property: date
+        direction: DESC
+    limit: 100
     order:
       - formula.record
       - date
@@ -32,6 +40,10 @@ views:
       - related
   - type: table
     name: All logs
+    sort:
+      - property: date
+        direction: DESC
+    limit: 500
     order:
       - formula.record
       - date

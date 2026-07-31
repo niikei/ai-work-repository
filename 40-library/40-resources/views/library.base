@@ -32,6 +32,10 @@ views:
   - type: table
     name: Drafts
     filters: status == "draft"
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 50
     order:
       - formula.record
       - type
@@ -43,6 +47,10 @@ views:
     groupBy:
       property: type
       direction: ASC
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 200
     order:
       - formula.record
       - type
@@ -54,6 +62,10 @@ views:
     groupBy:
       property: type
       direction: ASC
+    sort:
+      - property: updated
+        direction: DESC
+    limit: 100
     order:
       - formula.record
       - type

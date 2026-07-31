@@ -14,6 +14,7 @@ EXPECTED_BASES = {
     "projects.base": {"Attention", "Active", "Portfolio"},
     "recent-logs.base": {"Last 7 days", "Last 30 days", "All logs"},
 }
+MAX_VIEW_LIMIT = 500
 
 
 def test_shared_bases_have_valid_structure() -> None:
@@ -32,6 +33,13 @@ def test_shared_bases_have_valid_structure() -> None:
         assert isinstance(views, list)
         assert {view["name"] for view in views} == expected_views
         assert all(view.get("type") == "table" for view in views)
+        assert all(isinstance(view.get("limit"), int) for view in views)
+        assert all(0 < view["limit"] <= MAX_VIEW_LIMIT for view in views)
+        assert all(
+            isinstance(view.get("sort"), list)
+            and all(item.get("direction") in {"ASC", "DESC"} for item in view["sort"])
+            for view in views
+        )
 
 
 def test_area_base_derives_review_schedule() -> None:

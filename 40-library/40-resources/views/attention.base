@@ -40,6 +40,10 @@ views:
     groupBy:
       property: type
       direction: ASC
+    sort:
+      - property: formula.signal_date
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - type
@@ -49,6 +53,10 @@ views:
   - type: table
     name: Projects
     filters: type == "project"
+    sort:
+      - property: target_date
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - status
@@ -59,6 +67,10 @@ views:
   - type: table
     name: Areas
     filters: type == "area"
+    sort:
+      - property: last_reviewed
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - status
@@ -68,6 +80,10 @@ views:
   - type: table
     name: External resources
     filters: type == "artifact" && kind == "external-resource"
+    sort:
+      - property: last_verified
+        direction: ASC
+    limit: 50
     order:
       - formula.record
       - owner
