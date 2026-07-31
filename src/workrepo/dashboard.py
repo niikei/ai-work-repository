@@ -15,20 +15,7 @@ DASHBOARD_PATH = Path("DASHBOARD.md")
 INACTIVE_PROJECT_STATUSES = frozenset({"completed", "cancelled"})
 INACTIVE_AREA_STATUSES = frozenset({"retired"})
 HEALTH_PRIORITY = {"red": 0, "amber": 1, "unknown": 2, "green": 3}
-COCKPIT_VIEWS = (
-    (
-        "Attention",
-        Path("40-library/40-resources/views/attention.base"),
-        "All attention",
-    ),
-    ("Active projects", Path("40-library/40-resources/views/projects.base"), "Active"),
-    ("Area reviews", Path("40-library/40-resources/views/areas.base"), "Attention"),
-    (
-        "Recent activity",
-        Path("40-library/40-resources/views/recent-logs.base"),
-        "Last 7 days",
-    ),
-)
+COCKPIT_VIEW = Path("40-library/40-resources/views/cockpit.base")
 REFERENCE_VIEWS = (
     ("Library", Path("40-library/40-resources/views/library.base")),
     (
@@ -74,23 +61,22 @@ def generate_dashboard(root: Path, *, state: RepositoryState | None = None) -> P
 
 
 def _management_views_section(root: Path) -> tuple[str, ...]:
-    embeds = tuple(
-        line
-        for label, path, view in COCKPIT_VIEWS
-        if (root / path).is_file()
-        for line in (f"### {label}", "", f"![[{path.as_posix()}#{view}]]", "")
+    embed = (
+        (f"![[{COCKPIT_VIEW.as_posix()}#Attention]]", "")
+        if (root / COCKPIT_VIEW).is_file()
+        else ()
     )
     links = tuple(
         f"- [{label}]({_path_link(path)})"
         for label, path in REFERENCE_VIEWS
         if (root / path).is_file()
     )
-    if not embeds and not links:
+    if not embed and not links:
         return ()
     content = [
         "## Operational cockpit",
         "",
-        *embeds,
+        *embed,
     ]
     if links:
         content.extend(("### Reference views", "", *links))

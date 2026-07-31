@@ -2,21 +2,7 @@
 
 ## Operational cockpit
 
-### Attention
-
-![[40-library/40-resources/views/attention.base#All attention]]
-
-### Active projects
-
-![[40-library/40-resources/views/projects.base#Active]]
-
-### Area reviews
-
-![[40-library/40-resources/views/areas.base#Attention]]
-
-### Recent activity
-
-![[40-library/40-resources/views/recent-logs.base#Last 7 days]]
+![[40-library/40-resources/views/cockpit.base#Attention]]
 
 ### Reference views
 

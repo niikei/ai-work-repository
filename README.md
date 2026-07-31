@@ -160,7 +160,7 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 ## Obsidian
 
 このリポジトリのルートをObsidianのVaultとして開けます。日常操作は
-[Cockpit](COCKPIT.canvas)から始められます。共有する設定は、標準Markdown、
+[Dashboard](DASHBOARD.md)に埋め込まれた固定Cockpitから始められます。共有する設定は、標準Markdown、
 相対リンク、`90-templates/`、文書ごとの`assets/`だけに限定しています。レイアウト、テーマ、
 プラグインなどの個人設定はGitで追跡しません。
 

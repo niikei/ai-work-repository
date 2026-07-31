@@ -21,25 +21,23 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
 
 
 def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
-    """Operational Base views render inline without making them mandatory."""
+    """The unified operational Base renders inline without being mandatory."""
     views = repository / "40-library/40-resources/views"
     views.mkdir(parents=True)
-    (views / "projects.base").write_text("views: []\n", encoding="utf-8")
+    (views / "cockpit.base").write_text("views: []\n", encoding="utf-8")
 
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
     assert "## Operational cockpit" in content
-    assert "### Active projects" in content
-    assert "![[40-library/40-resources/views/projects.base#Active]]" in content
+    assert "![[40-library/40-resources/views/cockpit.base#Attention]]" in content
     assert "markdownlint-disable" not in content
-    assert "### Area reviews" not in content
 
 
 def test_dashboard_places_cockpit_before_markdown_summary(repository: Path) -> None:
     """Obsidian opens on interactive views instead of static fallback tables."""
     views = repository / "40-library/40-resources/views"
     views.mkdir(parents=True)
-    (views / "attention.base").write_text("views: []\n", encoding="utf-8")
+    (views / "cockpit.base").write_text("views: []\n", encoding="utf-8")
 
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
