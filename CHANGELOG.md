@@ -11,6 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - native Obsidian Bases for Projects, Areas, recent Logs, and managed external resources;
 - optional Project owner, priority, and target date portfolio metadata, plus Area ownership;
+- stable-ID-based `workrepo open` integration with Obsidian;
 - bounded human- and machine-readable `workrepo review-context` evidence selection for period
   reviews;
 - isolated `workrepo check --ref` validation for historical Git snapshots, including deterministic

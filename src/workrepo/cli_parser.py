@@ -133,6 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="move an archived durable record back to its active type root",
     )
     restore_parser.add_argument("document_id", metavar="ID", help="stable document ID")
+    _add_auxiliary_commands(subparsers)
     subparsers.add_parser(
         "dashboard",
         help="generate the human-readable current-state dashboard",
@@ -202,8 +203,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     hooks_subparsers.add_parser("install", help="activate managed hooks locally")
     hooks_subparsers.add_parser("status", help="show whether managed hooks are active")
-    subparsers.add_parser("doctor", help="diagnose local repository setup")
     return parser
+
+
+def _add_auxiliary_commands(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = subparsers.add_parser(
+        "open",
+        help="open canonical content in Obsidian by stable ID",
+    )
+    parser.add_argument("document_id", metavar="ID", help="stable document ID")
+    subparsers.add_parser("doctor", help="diagnose local repository setup")
 
 
 def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:

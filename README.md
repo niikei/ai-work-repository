@@ -87,6 +87,9 @@ uv run workrepo list --type project --status active
 uv run workrepo list --type project --area area:erp-operations
 uv run workrepo search "cutover decision" --type artifact
 
+# 安定IDからObsidianで対象文書を開く
+uv run workrepo open project:erp-upgrade
+
 # 期間レビュー用の根拠を上限付きで取得する（AI向けは--json）
 uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20
 uv run workrepo review-context --from 2026-07-27 --to 2026-08-02 --limit 20 --json

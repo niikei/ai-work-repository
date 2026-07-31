@@ -71,6 +71,14 @@ Base上で既存プロパティを編集した場合も、変更後に`uv run wo
 Baseから新しい行を作ると、必須プロパティや配置規則を満たさない可能性があります。新規文書は
 引き続き`workrepo new`、一時記録は`workrepo capture`を使います。
 
+ターミナルや検索結果で安定IDが分かっている場合は、パスを探さずに対象を開けます。
+
+```shell
+uv run workrepo open project:erp-upgrade
+```
+
+Archiveやrestoreで物理パスが変わった後も、同じIDで現在のファイルを解決します。
+
 ## Gitで共有するもの
 
 `.obsidian/app.json`と`.obsidian/templates.json`だけを共有します。次のような個人状態は
