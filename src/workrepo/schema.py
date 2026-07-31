@@ -8,7 +8,7 @@ import yaml
 from workrepo.yamlutil import load_yaml
 
 SCHEMA_PATH = Path(".workspace/schemas/document.schema.yaml")
-SUPPORTED_SCHEMA_VERSION = 4
+SUPPORTED_SCHEMA_VERSION = 5
 
 
 @dataclass(frozen=True, slots=True)

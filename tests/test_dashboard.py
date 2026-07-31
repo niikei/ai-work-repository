@@ -14,7 +14,7 @@ def test_empty_dashboard_uses_compact_table_cells(repository: Path) -> None:
     """Generated empty rows agree with the repository's MD060 style."""
     content = generate_dashboard(repository).read_text(encoding="utf-8")
 
-    assert "| _None_ | | | |" in content
+    assert "| _None_ | | | | | | |" in content
     assert "| _None_ | | | | |" in content
     assert "|  |" not in content
 

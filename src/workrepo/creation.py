@@ -67,6 +67,9 @@ class CreateRequest:
     related: tuple[str, ...] = ()
     document_date: date | None = None
     template_name: str | None = None
+    owner: str | None = None
+    priority: str | None = None
+    target_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,6 +286,19 @@ def _render_template(
         else "related:\n" + "\n".join(f"  - {related_id}" for related_id in request.related)
     )
     rendered = RELATED_PATTERN.sub(related_yaml, rendered, count=1)
+    optional_metadata: list[str] = []
+    if request.owner is not None:
+        optional_metadata.append(f"owner: {_yaml_string(request.owner)}")
+    if request.priority is not None:
+        optional_metadata.append(f"priority: {request.priority}")
+    if request.target_date is not None:
+        optional_metadata.append(f"target_date: {request.target_date.isoformat()}")
+    if optional_metadata:
+        rendered = rendered.replace(
+            "created:",
+            f"{'\n'.join(optional_metadata)}\ncreated:",
+            1,
+        )
     return f"{rendered.rstrip()}\n"
 
 

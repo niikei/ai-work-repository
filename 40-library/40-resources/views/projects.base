@@ -5,6 +5,7 @@ filters:
     - type == "project"
 formulas:
   record: file.asLink(id)
+  overdue: if(target_date, target_date < today() && status != "completed" && status != "cancelled", false)
 properties:
   formula.record:
     displayName: Project
@@ -12,6 +13,14 @@ properties:
     displayName: Status
   health:
     displayName: Health
+  owner:
+    displayName: Owner
+  priority:
+    displayName: Priority
+  target_date:
+    displayName: Target date
+  formula.overdue:
+    displayName: Overdue
   updated:
     displayName: Updated
   related:
@@ -24,10 +33,16 @@ views:
         - status == "blocked"
         - health == "amber"
         - health == "red"
+        - priority == "critical"
+        - formula.overdue
     order:
       - formula.record
       - status
       - health
+      - priority
+      - owner
+      - target_date
+      - formula.overdue
       - updated
       - related
   - type: table
@@ -36,6 +51,9 @@ views:
     order:
       - formula.record
       - health
+      - priority
+      - owner
+      - target_date
       - updated
       - related
   - type: table
@@ -47,5 +65,9 @@ views:
       - formula.record
       - status
       - health
+      - priority
+      - owner
+      - target_date
+      - formula.overdue
       - updated
       - created

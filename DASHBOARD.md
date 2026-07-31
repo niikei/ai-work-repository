@@ -10,9 +10,9 @@ _Inbox is clear._
 
 ## Active projects
 
-| Project | Status | Health | Updated |
-| --- | --- | --- | --- |
-| _None_ | | | |
+| Project | Status | Health | Priority | Owner | Target date | Updated |
+| --- | --- | --- | --- | --- | --- | --- |
+| _None_ | | | | | | |
 
 ## Areas
 

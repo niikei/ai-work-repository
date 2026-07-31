@@ -79,6 +79,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="owning Project or Area ID (required for artifact)",
     )
     new_parser.add_argument(
+        "--owner",
+        help="owner for a Project, Area, or external-resource Artifact",
+    )
+    new_parser.add_argument(
+        "--priority",
+        choices=("low", "medium", "high", "critical"),
+        help="Project priority",
+    )
+    new_parser.add_argument(
+        "--target-date",
+        type=_iso_date,
+        help="Project target date in YYYY-MM-DD format",
+    )
+    new_parser.add_argument(
         "--kind",
         choices=tuple(ARTIFACT_DIRECTORIES),
         help="artifact kind (required for artifact)",
@@ -197,10 +211,6 @@ def _add_external_resource_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--provider",
         help="external-resource Artifact provider, such as sharepoint",
-    )
-    parser.add_argument(
-        "--owner",
-        help="person or team responsible for the external-resource Artifact",
     )
     parser.add_argument(
         "--access",

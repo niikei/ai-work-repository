@@ -64,7 +64,8 @@ Archiveへ移動せず、必ずコマンドを使ってください。
 - `external-resources.base`: 90日以上未確認、access別、全外部リソース
 
 各行は安定IDを表示名にしたリンクです。ProjectとAreaは物理ファイル名がどちらも`index.md`の
-ため、`file.name`ではなくIDを使って区別します。
+ため、`file.name`ではなくIDを使って区別します。Projectの要注意ビューには、blocked、
+amber/red、critical、および`target_date`超過が表示されます。
 
 Base上で既存プロパティを編集した場合も、変更後に`uv run workrepo check`を実行してください。
 Baseから新しい行を作ると、必須プロパティや配置規則を満たさない可能性があります。新規文書は

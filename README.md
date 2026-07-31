@@ -51,6 +51,9 @@ uv run workrepo new area erp-operations --title "ERP運用"
 # Areaに関連するProjectを作成
 uv run workrepo new project erp-upgrade \
   --title "ERP更改" \
+  --owner "ERP Team" \
+  --priority high \
+  --target-date 2026-09-30 \
   --related area:erp-operations
 
 # 日付付きのLogを作成
@@ -116,6 +119,8 @@ Logは`10-log/2026/07/2026-07-27-week/`のように、年・月・週で整理�
 - Entityと正式な成果物には、テンプレートに沿ったYAML frontmatterを付けます。
 - ProjectとAreaでは`index.md`が管理対象です。配下の成果物や分析コードはそのProject固有の
   文脈として自由に構成できます。
+- Projectは任意の`owner`、`priority`、`target_date`でポートフォリオ管理でき、Areaも
+  任意の`owner`を持てます。`target_date`は将来を表す計画日なので未来日を許可します。
 - ProjectとArea本体は`<root>/<slug>/index.md`の一階層に保ちます。内部の成果物は
   階層化できますが、入れ子のEntityや別の`index.md`は作りません。Entity直下のMarkdownは
   `index.md`だけにし、補助Markdownはサブディレクトリへ置きます。

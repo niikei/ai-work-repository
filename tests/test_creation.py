@@ -53,6 +53,28 @@ def test_create_project_from_template(repository: Path) -> None:
     assert check_repository(repository) == []
 
 
+def test_create_project_with_management_metadata(repository: Path) -> None:
+    """Optional portfolio fields are rendered as typed frontmatter."""
+    path = create_document(
+        repository,
+        CreateRequest(
+            document_type="project",
+            slug="managed-project",
+            title="Managed project",
+            document_date=DOCUMENT_DATE,
+            owner="Platform Team",
+            priority="high",
+            target_date=date(2026, 9, 30),
+        ),
+    )
+
+    content = path.read_text(encoding="utf-8")
+    assert 'owner: "Platform Team"' in content
+    assert "priority: high" in content
+    assert "target_date: 2026-09-30" in content
+    assert check_repository(repository) == []
+
+
 @pytest.mark.parametrize(("document_type", "destination"), LIBRARY_DESTINATIONS.items())
 def test_create_library_entity_in_function_and_type_directory(
     repository: Path,

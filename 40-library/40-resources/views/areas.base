@@ -16,6 +16,8 @@ properties:
     displayName: Last reviewed
   group:
     displayName: Group
+  owner:
+    displayName: Owner
 views:
   - type: table
     name: Attention
@@ -30,6 +32,7 @@ views:
       - last_reviewed
       - review_cycle
       - group
+      - owner
   - type: table
     name: By group
     groupBy:
@@ -41,6 +44,7 @@ views:
       - status
       - last_reviewed
       - review_cycle
+      - owner
   - type: table
     name: Review cadence
     groupBy:
@@ -51,3 +55,4 @@ views:
       - last_reviewed
       - health
       - group
+      - owner

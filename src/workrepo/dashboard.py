@@ -116,9 +116,9 @@ def _project_section(documents: list[Document]) -> tuple[str, ...]:
     return (
         "## Active projects",
         "",
-        "| Project | Status | Health | Updated |",
-        "| --- | --- | --- | --- |",
-        *(rows or ("| _None_ | | | |",)),
+        "| Project | Status | Health | Priority | Owner | Target date | Updated |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+        *(rows or ("| _None_ | | | | | | |",)),
     )
 
 
@@ -155,8 +155,14 @@ def _state_row(document: Document) -> str:
     link = _path_link(document.path)
     status = _escape_text(_metadata_text(document, "status"))
     health = _escape_text(_metadata_text(document, "health", default="unknown"))
+    priority = _escape_text(_metadata_text(document, "priority"))
+    owner = _escape_text(_metadata_text(document, "owner"))
+    target_date = _escape_text(_metadata_text(document, "target_date"))
     updated = _escape_text(_metadata_text(document, "updated"))
-    return f"| [{title}]({link}) | {status} | {health} | {updated} |"
+    return (
+        f"| [{title}]({link}) | {status} | {health} | {priority} | {owner} | "
+        f"{target_date} | {updated} |"
+    )
 
 
 def _area_row(document: Document, today: date) -> str:

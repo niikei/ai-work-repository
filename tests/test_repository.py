@@ -369,7 +369,7 @@ def test_schema_version_is_enforced(repository: Path) -> None:
     """An incompatible schema cannot be interpreted with silent defaults."""
     schema_path = repository / ".workspace/schemas/document.schema.yaml"
     schema_path.write_text(
-        schema_path.read_text(encoding="utf-8").replace("version: 4", "version: 99"),
+        schema_path.read_text(encoding="utf-8").replace("version: 5", "version: 99"),
         encoding="utf-8",
     )
 

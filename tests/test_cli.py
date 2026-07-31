@@ -58,6 +58,12 @@ def test_cli_supports_capture_to_review_workflow(repository: Path) -> None:
                 "ERP更改",
                 "--related",
                 "area:erp-operations",
+                "--owner",
+                "ERP Team",
+                "--priority",
+                "high",
+                "--target-date",
+                "2026-09-30",
                 "--date",
                 "2026-07-29",
             ),
@@ -107,6 +113,8 @@ def test_cli_supports_capture_to_review_workflow(repository: Path) -> None:
     dashboard = (repository / "DASHBOARD.md").read_text(encoding="utf-8")
     assert "Open items: **1**" in dashboard
     assert "[ERP更改](20-projects/erp-upgrade/index.md)" in dashboard
+    assert "ERP Team" in dashboard
+    assert "2026-09-30" in dashboard
     assert "## Participants" in (
         repository / "10-log/2026/07/2026-07-27-week/2026-07-29-erp-upgrade-meeting.md"
     ).read_text(encoding="utf-8")
