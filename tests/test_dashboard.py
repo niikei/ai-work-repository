@@ -35,6 +35,18 @@ def test_dashboard_embeds_available_cockpit_bases(repository: Path) -> None:
     assert "### Area reviews" not in content
 
 
+def test_dashboard_places_cockpit_before_markdown_summary(repository: Path) -> None:
+    """Obsidian opens on interactive views instead of static fallback tables."""
+    views = repository / "40-library/40-resources/views"
+    views.mkdir(parents=True)
+    (views / "attention.base").write_text("views: []\n", encoding="utf-8")
+
+    content = generate_dashboard(repository).read_text(encoding="utf-8")
+
+    assert content.index("## Operational cockpit") < content.index("## Markdown summary")
+    assert content.index("## Markdown summary") < content.index("## Inbox")
+
+
 def test_dashboard_links_to_available_reference_bases(repository: Path) -> None:
     """Less frequent management views remain easy to open."""
     views = repository / "40-library/40-resources/views"

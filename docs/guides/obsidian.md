@@ -49,7 +49,8 @@ uv run workrepo refresh
 [Dashboard](../../DASHBOARD.md)も同じコマンドで更新されます。ObsidianではDashboardを
 ブックマークすると、Inboxに加えてAttention、進行中Project、Areaレビュー、直近LogのBaseを
 同じ画面で操作できます。Dashboardを開いた状態でObsidianを終了すれば、次回起動時にも前回の
-ワークスペースとして復元されます。
+ワークスペースとして復元されます。操作可能なBaseを先頭に配置し、その下にObsidian以外でも
+読めるMarkdown概要を配置しています。
 
 完了済みProjectなどを`workrepo archive ID`で移動した場合も、標準Markdownリンクと
 生成関連リンクは新しい相対パスへ更新されます。Obsidianのファイル操作で管理対象を直接
