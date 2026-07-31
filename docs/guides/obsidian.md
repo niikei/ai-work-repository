@@ -88,6 +88,32 @@ uv run workrepo open project:erp-upgrade
 
 Archiveやrestoreで物理パスが変わった後も、同じIDで現在のファイルを解決します。
 
+## Cockpitをホーム画面にする
+
+ルートの`COCKPIT.canvas`は、Attention、進行中Project、Areaレビュー、直近Logを2×2に配置した
+操作画面です。右側ツールバーの「全体へズーム」を使うと、4つのBaseを1画面で俯瞰できます。
+`COCKPIT.canvas`を開いた状態でObsidianを終了すれば、次回も同じ画面から始められます。
+
+`DASHBOARD.md`はスクロールして詳細を確認するMarkdown版、`COCKPIT.canvas`は日常操作用として
+使い分けます。
+
+## File Explorerを整理する
+
+`.obsidian/snippets/vault-focus.css`は、`src/`、`tests/`、開発用設定などをFile Explorerから
+隠します。ファイルは削除されず、Git、CLI、検索対象の既存規則には影響しません。
+
+Obsidianの「設定 → 外観 → CSSスニペット」で`vault-focus`を有効にします。CLIからも設定できます。
+
+```shell
+obsidian snippet:enable name=vault-focus
+```
+
+開発用ファイルを確認するときはスニペットを無効にします。
+
+```shell
+obsidian snippet:disable name=vault-focus
+```
+
 ## Gitで共有するもの
 
 `.obsidian/app.json`と`.obsidian/templates.json`だけを共有します。次のような個人状態は

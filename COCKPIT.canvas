@@ -1,0 +1,10 @@
+{
+	"nodes":[
+		{"id":"navigation","type":"text","text":"# Work Cockpit\n\n- [Dashboard](DASHBOARD.md)\n- [Inbox](00-inbox/)\n- [Library](40-library/40-resources/views/library.base)\n- [External resources](40-library/40-resources/views/external-resources.base)\n- [Navigation](NAVIGATION.md)","x":-420,"y":0,"width":360,"height":420,"color":"6"},
+		{"id":"attention","type":"file","file":"40-library/40-resources/views/attention.base","subpath":"#All attention","x":0,"y":0,"width":900,"height":500,"color":"1"},
+		{"id":"projects","type":"file","file":"40-library/40-resources/views/projects.base","subpath":"#Active","x":950,"y":0,"width":900,"height":500,"color":"4"},
+		{"id":"areas","type":"file","file":"40-library/40-resources/views/areas.base","subpath":"#Attention","x":0,"y":550,"width":900,"height":500,"color":"2"},
+		{"id":"recent-activity","type":"file","file":"40-library/40-resources/views/recent-logs.base","subpath":"#Last 7 days","x":950,"y":550,"width":900,"height":500,"color":"5"}
+	],
+	"edges":[]
+}
