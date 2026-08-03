@@ -22,8 +22,8 @@ workrepo = "workrepo.cli:main"
 dev = [
     "mypy>=1.17.0",
     "pytest>=8.4.0",
-    "ruff>=0.12.0",
-    "rumdl>=0.2.45",
+    "ruff>=0.16.1",
+    "rumdl>=0.2.47",
     "types-pyyaml>=6.0.12.20250516",
 ]
 
